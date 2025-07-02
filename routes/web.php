@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\TodoController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,10 +32,22 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [TodoController::class, 'index'])->name('dashboard');
-    Route::post('/todos', [TodoController::class, 'store'])->name('todos.store');
-    Route::patch('/todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
-    Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
+    Route::get('/dashboard', [TodoController::class, 'index']);
+    Route::post('/todos', [TodoController::class, 'store']);
+    Route::get('/todos/{id}/toggle', [TodoController::class, 'toggle']);
+    Route::delete('/todos/{id}', [TodoController::class, 'destroy']);
 });
 
-require __DIR__.'/auth.php';
+//User
+Route::get('/register', [UserController::class, 'registerForm']);
+Route::post('/register', [UserController::class, 'register']);
+
+Route::get('/login', [UserController::class, 'LoginForm'])->name('login');
+Route::post('/login',[UserController::class, 'login']);
+Route::post('/logout', [UserComtroller::class, 'logout']);
+
+Route::middleware(['auth'])->group(function(){
+    Route::get('/dashboard',[TodoController::class,'index']);
+    });
+
+// require __DIR__.'/auth.php';

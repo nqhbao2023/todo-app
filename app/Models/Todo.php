@@ -7,12 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Todo extends Model
 {
-    use HasFactory;
-
-    protected $fillable = ['title', 'completed', 'user_id'];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
+    protected $fillable = ['user_id', 'completed', 'title'];
+    public function user(){
+        
+        return $this->belongsTo(User::class);//Xác định quan hệ: mỗi công việc (Todo) thuộc về một người dùng (User).
     }
+    use HasFactory;
 }

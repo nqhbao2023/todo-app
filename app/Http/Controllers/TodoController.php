@@ -1,42 +1,42 @@
 <?php
-namespace App\Http\Controllers;
 
+namespace App\Http\Controllers;
 use App\Models\Todo;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
+use Illuminate\Http\Request;
+
 
 class TodoController extends Controller
 {
-    public function index()
-    {
-        $todos = Todo::where('user_id', Auth::id())->latest()->get();
-        return view('dashboard', compact('todos'));
+
+    public function index(){
+        $todo = Todo::where('user_id', Auth::id())->lastest()->get();
+        return view('dashboard', compact('todo')); //compact chuyen du lieu tu controller sang view
+
     }
 
-    public function store(Request $request)
-    {
-        $request->validate(['title' => 'required|string|max:255']);
-
+    public function add(Request $request){
+        $request-> validate([ 'title'=> 'required'
+    ]);
         Todo::create([
-            'title' => $request->title,
-            'user_id' => Auth::id(),
-            'completed' => false,
+            'user_id'=> Auth::id(),
+            'title'=> $request -> title,
+            
         ]);
 
-        return redirect()->route('dashboard');
+        return redirect('/dashboard');
     }
 
-    public function update(Todo $todo)
-    {
-        $this->authorize('update', $todo);
-        $todo->update(['completed' => !$todo->completed]);
-        return redirect()->route('dashboard');
+    public function markDone($id){
+        $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $todo ->completed = !$todo->completed;
+        $todo ->save();
+        return redirect('/dashboard');
     }
 
-    public function destroy(Todo $todo)
-    {
-        $this->authorize('delete', $todo);
-        $todo->delete();
-        return redirect()->route('dashboard');
+    public function delete($id){
+        
     }
+   
 }
