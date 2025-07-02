@@ -1,4 +1,5 @@
-<?php
+<?php>
+
 <h2>Todo List của bạn</h2>
 
 <form action="/todos" method="POST">
@@ -33,4 +34,3 @@
     @csrf
     <button>Đăng xuất</button>
 </form>
-?>
