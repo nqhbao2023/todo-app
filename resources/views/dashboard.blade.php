@@ -1,5 +1,3 @@
-<?php>
-
 <h2>Todo List của bạn</h2>
 
 <form action="/todos" method="POST">
@@ -14,7 +12,7 @@
             @if($todo->completed)
                 <del>{{ $todo->title }}</del>
             @else
-                {{ $todo->title }}
+                {{ $todo->title }} 
             @endif
 
             <a href="/todos/{{ $todo->id }}/toggle">
@@ -34,3 +32,4 @@
     @csrf
     <button>Đăng xuất</button>
 </form>
+

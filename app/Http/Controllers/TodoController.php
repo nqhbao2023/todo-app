@@ -11,8 +11,8 @@ class TodoController extends Controller
 {
 
     public function index(){
-        $todo = Todo::where('user_id', Auth::id())->lastest()->get();
-        return view('dashboard', compact('todo')); //compact chuyen du lieu tu controller sang view
+        $todos = Todo::where('user_id', Auth::id())->latest()->get();
+        return view('dashboard', compact('todos')); //compact chuyen du lieu tu controller sang view
 
     }
 
@@ -36,6 +36,9 @@ class TodoController extends Controller
     }
 
     public function delete($id){
+        $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $todo ->delete();
+        return redirect('/dashboard');
         
     }
    

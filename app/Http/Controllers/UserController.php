@@ -17,8 +17,8 @@ class UserController extends Controller
     public function register(Request $request){
         $request->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users', //unique: ko trung trong bang user
-            'password'=> 'required|min:6|confirmed'
+            'email' => 'required|email|unique:users,email', //unique: ko trung trong bang user
+            'password'=> 'required|string|min:6|confirmed'
         ]);
 
         User::create([
@@ -27,7 +27,7 @@ class UserController extends Controller
             'password'=>Hash::make($request->password),
 
         ]);
-        return redirect('/login');
+        return redirect('/login')->with('status', 'hell yeah! You are registered successfully');
     }
 
 
@@ -40,19 +40,18 @@ class UserController extends Controller
 
         $request->validate ([
             'email'=>'required|email',
-            'password'=> 'requred|min:6',
+            'password'=> 'required|min:6',
 
         ]);
 
         if(Auth::attempt($request->only('email','password'))){
             return redirect('/dashboard');
         }
-        return redirect('/login')->withErrors('wrong email or password');
+        return back()->withErrors([
+            'email'=> 'Wrong email or password',])->onlyInput('email');
 
     }
 
-
-    
         public function logout(){
             Auth::logout();
             return redirect('/login');
