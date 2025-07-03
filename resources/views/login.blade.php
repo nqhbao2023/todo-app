@@ -1,5 +1,17 @@
+<!DOCTYPE html>
+<html lang ="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    @vite ('resources/css/app.css ')
+    
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">{{-- flex item va justify-center--}}
+
+
 <form method="POST" action="/login">
     @csrf
+    
 
     <input type="email" name="email" placeholder="Email" value="{{ old('email') }}" required>
     @error('email')
@@ -27,3 +39,8 @@
         <a href="/register">Bạn chưa có tài khoản? Đăng ký ngay</a>
     </p>
 </form>
+
+</body>
+</html>
+    
+
