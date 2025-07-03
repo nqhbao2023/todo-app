@@ -1,5 +1,6 @@
 <form method="POST" action="/login">
     @csrf
+
     <input type="email" name="email" placeholder="Email" value="{{ old('email') }}" required>
     @error('email')
     <div style="color:red">
@@ -9,23 +10,20 @@
 
     <input type="password" name="password" placeholder="password" required>
     @error('password')
-
     <div style="color:red">
         {{ $message }}
     </div>
-
     @enderror
 
-    @if ($error->has('email'))
+    @if ($errors->has('email'))
     <div style="color:red">
-        {{ $error->first('email') }}
-
+        {{ $errors->first('email') }}
     </div>
     @endif
 
-    <button type="submit">Login </button>
+    <button type="submit">Login</button>
 
-    <p> 
-        <a href =" /register "> don't have account? Register now </a>
+    <p>
+        <a href="/register">Bạn chưa có tài khoản? Đăng ký ngay</a>
     </p>
 </form>
