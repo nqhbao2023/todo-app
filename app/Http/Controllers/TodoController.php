@@ -17,11 +17,16 @@ class TodoController extends Controller
     }
 
     public function add(Request $request){
-        $request-> validate([ 'title'=> 'required'
+
+        $request-> validate([
+             'title'=> 'required',
+             'deadline' => 'nullable|date',
+
     ]);
         Todo::create([
             'user_id'=> Auth::id(),
             'title'=> $request -> title,
+            'deadline' => $request->deadline,
             
         ]);
 
@@ -41,5 +46,26 @@ class TodoController extends Controller
         return redirect('/dashboard');
         
     }
+    public function edit($id) {
+        $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $todos = Todo::where('user_id', Auth::id())->latest()->get(); // để render danh sách cùng lúc
+
+        return view('dashboard', compact('todos', 'todo')); // truyền thêm $todo đang edit
+    }
+    public function update(Request $request, $id) {
+        $request->validate([
+            'title' => 'required'
+        ]);
+
+        $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $todo->title = $request->title;
+        $todo->save();
+
+        return redirect('/dashboard');
+    }
+
+
+    
+
    
 }

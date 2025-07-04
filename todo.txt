@@ -1,0 +1,72 @@
+🕐 1.1. Thêm ngày đến hạn (Deadline)
+Người dùng có thể chọn ngày/thời gian hoàn thành cho từng công việc.
+
+Sắp xếp theo deadline gần nhất.
+
+Thêm màu cảnh báo đỏ nếu gần/đã quá hạn.
+
+✏️ 1.2. Chỉnh sửa tiêu đề + deadline
+Hiển thị nút "Sửa" như bạn đã có, bổ sung chỉnh sửa cả deadline.
+
+📂 1.3. Phân loại (Categories/Tags)
+Cho phép chọn loại công việc: Học tập, Công việc, Cá nhân...
+
+Hoặc gán Tag tự tạo: @read, @urgent...
+
+⭐ 1.4. Đánh dấu mức độ ưu tiên (priority)
+Cao, Trung bình, Thấp
+
+Sắp xếp Todo theo mức ưu tiên
+
+🔄 2. Cải Thiện Tương Tác & Trải Nghiệm
+📅 2.1. Lọc và tìm kiếm
+Tìm todo theo tên
+
+Bộ lọc theo trạng thái: đã hoàn thành / chưa hoàn thành
+
+Lọc theo ngày tạo hoặc deadline
+
+⏳ 2.2. Thống kê
+Tổng todo
+
+Bao nhiêu đã hoàn thành / chưa hoàn thành
+
+Tiến độ hôm nay (%)
+
+🔔 2.3. Thông báo (Notification)
+Gợi ý “Bạn có 3 việc hôm nay cần làm”
+
+Gửi email nếu công việc quá hạn (dùng Laravel Scheduler)
+
+👥 3. Mở rộng theo người dùng (nhiều user)
+🔐 3.1. Xác thực nâng cao
+Thêm xác thực email
+
+Reset mật khẩu
+
+Avatar, bio cá nhân
+
+🗂 3.2. Dashboard riêng mỗi người
+Mỗi user chỉ thấy todo của mình (bạn đã có)
+
+Thêm ảnh đại diện người dùng
+
+🖼 4. Giao diện nâng cao
+🌓 4.1. Dark Mode
+Tự đổi sáng/tối dựa theo giờ hoặc nút gạt
+
+💡 4.2. Responsive + Mobile Friendly
+Dùng Tailwind’s responsive class (sm:, md:) cho giao diện đẹp trên điện thoại
+
+📊 4.3. Biểu đồ
+Tiến độ công việc dưới dạng biểu đồ (dùng Chart.js)
+
+☁️ 5. Tính năng nâng cao
+☑ 5.1. Todo dạng checklist
+Mỗi todo chứa checklist nhỏ: “Học Laravel” gồm “Cài môi trường, Auth, CRUD”
+
+👥 5.2. Chia sẻ Todo
+Cho phép chia sẻ công việc với người khác (team)
+
+📁 5.3. Tệp đính kèm
+Cho phép đính kèm tài liệu (PDF, ảnh...) vào từng việc
