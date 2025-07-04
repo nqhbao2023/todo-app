@@ -12,14 +12,14 @@ return new class extends Migration
 public function up()
 {
     Schema::table('todos', function (Blueprint $table) {
-        $table->dateTime('deadline')->nullable();
+        $table->string('status')->default('Nháp');
     });
 }
-
 public function down()
 {
     Schema::table('todos', function (Blueprint $table) {
-        $table->dropColumn('deadline');
+        $table->dropColumn('status');
     });
 }
+
 };

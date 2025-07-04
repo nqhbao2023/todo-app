@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Todo extends Model
 {
-    protected $fillable = ['user_id', 'completed', 'title','deadline'];
+    protected $fillable = ['user_id', 'completed', 'title','deadline','priority','status','detail'];
+        protected $casts = [
+        'deadline'  => 'datetime', 
+        'completed' => 'boolean',
+    ];
     
     public function user(){
         

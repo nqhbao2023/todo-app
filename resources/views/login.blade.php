@@ -1,63 +1,62 @@
 <!DOCTYPE html>
-<html lang ="en">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Đăng nhập</title>
     @vite('resources/css/app.css')
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gradient-to-tr from-blue-100 to-blue-300 flex items-center justify-center min-h-screen font-sans">
 
-    <form method="POST" action="/login" class="bg-white p-8 rounded shadow-md w-full max-w-sm">
+    <form method="POST" action="/login" class="bg-white/80 backdrop-blur-md p-8 rounded-2xl shadow-xl w-full max-w-sm border border-blue-200">
         @csrf
 
-        <h2 class="text-2xl font-semibold mb-6 text-center">Đăng nhập</h2>
+        <h2 class="text-3xl font-extrabold mb-2 text-center text-blue-600 tracking-tight">Đăng nhập</h2>
 
-        {{-- Email --}}
-        <div class="mb-4">
+        <div class="mb-5">
+            <label for="email" class="block text-gray-700 font-semibold mb-1">Email</label>
             <input 
+                id="email"
                 type="email" 
                 name="email" 
-                placeholder="Email" 
+                placeholder="your@email.com" 
                 value="{{ old('email') }}" 
                 required
-                class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 transition"
             >
             @error('email')
-                <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+                <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
             @enderror
         </div>
 
-        {{-- Password --}}
-        <div class="mb-4">
+        <div class="mb-5">
+            <label for="password" class="block text-gray-700 font-semibold mb-1">Mật khẩu</label>
             <input 
+                id="password"
                 type="password" 
                 name="password" 
-                placeholder="Password" 
+                placeholder="••••••••"
                 required
-                class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 transition"
             >
             @error('password')
-                <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+                <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
             @enderror
         </div>
 
-        {{-- General error --}}
         @if ($errors->has('email'))
-            <div class="text-red-500 text-sm mb-4">{{ $errors->first('email') }}</div>
+            <div class="text-red-500 text-xs mb-4">{{ $errors->first('email') }}</div>
         @endif
 
-        {{-- Submit --}}
         <button 
             type="submit" 
-            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg shadow transition-all duration-200"
         >
-            Login
+            Đăng nhập
         </button>
 
-        {{-- Register link --}}
-        <p class="mt-4 text-center text-sm text-gray-600">
-            Bạn chưa có tài khoản?
-            <a href="/register" class="text-blue-500 hover:underline">Đăng ký ngay</a>
+        <p class="mt-6 text-center text-sm text-gray-600">
+            Chưa có tài khoản?
+            <a href="/register" class="text-blue-500 font-semibold hover:underline">Đăng ký ngay</a>
         </p>
     </form>
 
