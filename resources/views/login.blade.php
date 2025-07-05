@@ -14,6 +14,7 @@
 
         <div class="mb-5">
             <label for="email" class="block text-gray-700 font-semibold mb-1">Email</label>
+         
             <input 
                 id="email"
                 type="email" 
@@ -30,6 +31,7 @@
 
         <div class="mb-5">
             <label for="password" class="block text-gray-700 font-semibold mb-1">Mật khẩu</label>
+           
             <input 
                 id="password"
                 type="password" 

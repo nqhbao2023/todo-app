@@ -49,7 +49,7 @@
             </a>
         @endforeach
     </div>
-    <!-- Nút đăng xuất dưới cùng sidebar -->
+    <!-- Nút đăng xuất -->
     <form method="POST" action="/logout" class="mt-auto pt-6 text-center">
         @csrf
         <button class="w-full bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-semibold transition">
@@ -62,7 +62,7 @@
     <div class="flex-1 p-6">
         <h2 class="text-2xl font-bold mb-6 text-center">Todo List</h2>
         
-        {{-- Add Todo Button & Form --}}
+        {{-- Nút add todo--}}
         <div x-data="{ open: false }" class="mb-6">
             <button 
                 x-show="!open"

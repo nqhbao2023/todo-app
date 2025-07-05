@@ -5,9 +5,9 @@
     <title>Register</title>
     @vite('resources/css/app.css')
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gradient-to-tr from-red-100 to-red-300 flex justify-center items-center min-h-screen  ">
 
-    <form method="POST" action="/register" class="bg-white p-8 rounded shadow-md w-full max-w-sm">
+    <form method="POST" action="/register" class="bg-white p-8 rounded-3xl shadow-md w-full max-w-sm">
         @csrf
 
         <h2 class="text-2xl font-semibold mb-6 text-center">Đăng ký tài khoản</h2>
@@ -20,7 +20,7 @@
                 placeholder="Name" 
                 value="{{ old('name') }}" 
                 required
-                class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                class="w-full px-4 py-2 border rounded focus:outline-none  focus:ring-2 focus:ring-blue-400"
             >
             @error('name')
                 <div class="text-red-500 text-sm mt-1">{{ $message }}</div>

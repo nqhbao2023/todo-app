@@ -68,16 +68,7 @@ public function markDone($id){
     $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
     $todo->completed = !$todo->completed;
     $todo->save();
-    $currentTab = request()->get('tab', 'all');
-
-    if ($todo->completed) {
-        return redirect('/dashboard');
-    } else {
-        if ($currentTab === 'done') {
-            return redirect('/dashboard?tab=all');
-        }
-        return redirect()->back();
-    }
+    return redirect()->back();
 }
 
 
