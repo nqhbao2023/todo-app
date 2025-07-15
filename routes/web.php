@@ -21,29 +21,24 @@ Route::get('/', function () {
     return view('/login');
 });
 
+// Authenticated routes
 Route::middleware(['auth'])->group(function () {
-    
-    Route::get('/dashboard', [TodoController::class, 'index']);
-    Route::post('/todos', [TodoController::class, 'add']);
-   // Route::get('/todos/{id}/toggle', [TodoController::class, 'markDone']);
-    Route::post('/todos/{id}/toggle', [TodoController::class, 'markDone']);
 
-    Route::delete('/todos/{id}', [TodoController::class, 'delete']);
-    Route::put('/todos/{id}', [TodoController::class, 'update']);
-
-
-    Route::get('/todos/{id}/edit', [TodoController::class, 'edit']);
-    Route::put('/todos/{id}', [TodoController::class, 'update']);
-
+    Route::get('/dashboard', [TodoController::class, 'index'])->name('dashboard');
+    Route::post('/todos', [TodoController::class, 'add'])->name('todos.add');
+    Route::post('/todos/{id}/toggle', [TodoController::class, 'markDone'])->name('todos.toggle');
+    Route::delete('/todos/{id}', [TodoController::class, 'delete'])->name('todos.delete');
+    Route::put('/todos/{id}', [TodoController::class, 'update'])->name('todos.update');
+    Route::get('/todos/{id}/edit', [TodoController::class, 'edit'])->name('todos.edit');
 });
 
 //User
-Route::get('/register', [UserController::class, 'registerForm']);
-Route::post('/register', [UserController::class, 'register']);
-
+Route::get('/register', [UserController::class, 'registerForm'])->name('register.form');
+Route::post('/register', [UserController::class, 'register'])->name('register');
 Route::get('/login', [UserController::class, 'LoginForm'])->name('login');
-Route::post('/login',[UserController::class, 'login']);
-Route::post('/logout', [UserController::class, 'logout']);
+Route::post('/login', [UserController::class, 'login'])->name('login.post');
+Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     
 
-// require __DIR__.'/auth.php';
+// Trang tạo mới công việc (hiển thị form)
+Route::get('/todos/create', [TodoController::class, 'create'])->name('todos.create');
