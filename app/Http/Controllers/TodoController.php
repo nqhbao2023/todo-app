@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Todo;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class TodoController extends Controller
 {
+    // Trang danh sách todo
     public function index(Request $request)
     {
         $tab = $request->get('tab', 'all');
@@ -31,13 +33,23 @@ class TodoController extends Controller
         }
 
         $todos = $todos
+            ->with('assignee') // Eager load
             ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END')
             ->orderBy('deadline', 'asc')
-            ->paginate(10); // Dùng phân trang
+            ->paginate(10);
 
-        return view('dashboard', compact('todos', 'tab'));
+        $users = User::all();
+        return view('dashboard', compact('todos', 'tab', 'users'));
     }
 
+    // Hiển thị form tạo công việc
+    public function create()
+    {
+        $users = User::all();
+        return view('todos.create', compact('users'));
+    }
+
+    // Xử lý thêm mới todo
     public function add(Request $request)
     {
         $request->validate([
@@ -46,11 +58,13 @@ class TodoController extends Controller
             'priority' => 'required|string',
             'status' => 'required|string',
             'detail' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
         ]);
 
         Todo::create([
             'user_id' => Auth::id(),
             'title' => $request->title,
+            'assigned_to' => $request->assigned_to,
             'deadline' => $request->deadline,
             'priority' => $request->priority ?? 'Normal',
             'status' => $request->status,
@@ -60,41 +74,17 @@ class TodoController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Thêm công việc thành công!');
     }
-    public function create()
-{
-    // Có thể truyền mảng mặc định nếu muốn (nếu dùng @include form)
-    return view('todos.create');
-}
 
-
-    public function markDone($id)
-    {
-        $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-        $todo->completed = !$todo->completed;
-        $todo->save();
-        return redirect()->back();
-    }
-
-    public function delete($id)
-    {
-        $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-        $todo->delete();
-        return redirect()->route('dashboard');
-    }
-
+    // Hiển thị form sửa todo
     public function edit($id, Request $request)
     {
         $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-
-        $tab = $request->get('tab', 'all'); // Lấy lại tab nếu cần
-        $todos = Todo::where('user_id', Auth::id())
-            ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('deadline', 'asc')
-            ->paginate(10);
-
-        return view('todos.edit', compact('todo'));
+        $users = User::all();
+        $tab = $request->get('tab', 'all');
+        return view('todos.edit', compact('todo', 'users', 'tab'));
     }
 
+    // Xử lý cập nhật todo
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -103,6 +93,7 @@ class TodoController extends Controller
             'deadline' => 'nullable|date',
             'status' => 'required|string',
             'detail' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
         ]);
 
         $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
@@ -111,8 +102,26 @@ class TodoController extends Controller
         $todo->priority = $request->priority ?? 'Normal';
         $todo->status = $request->status;
         $todo->detail = $request->detail;
+        $todo->assigned_to = $request->assigned_to;
         $todo->save();
 
+        return redirect()->route('dashboard');
+    }
+
+    // Đánh dấu hoàn thành hoặc chưa hoàn thành
+    public function markDone($id)
+    {
+        $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $todo->completed = !$todo->completed;
+        $todo->save();
+        return redirect()->back();
+    }
+
+    // Xoá todo
+    public function delete($id)
+    {
+        $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $todo->delete();
         return redirect()->route('dashboard');
     }
 }

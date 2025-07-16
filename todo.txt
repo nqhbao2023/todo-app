@@ -1,72 +1,42 @@
-🕐 1.1. Thêm ngày đến hạn (Deadline)
-Người dùng có thể chọn ngày/thời gian hoàn thành cho từng công việc.
+1. Phân công công việc cho thành viên
+Thêm cột/field "Người được giao" (assignee).
 
-Sắp xếp theo deadline gần nhất.
+Khi tạo/sửa công việc, chọn thành viên team để giao việc.
 
-Thêm màu cảnh báo đỏ nếu gần/đã quá hạn.
+Trên dashboard, hiển thị avatar/tên người được giao.
 
-✏️ 1.2. Chỉnh sửa tiêu đề + deadline
-Hiển thị nút "Sửa" như bạn đã có, bổ sung chỉnh sửa cả deadline.
+2. Bình luận cho từng công việc
+Cho phép mọi người bình luận, trao đổi, cập nhật tiến độ trên từng công việc.
 
-📂 1.3. Phân loại (Categories/Tags)
-Cho phép chọn loại công việc: Học tập, Công việc, Cá nhân...
+Giao diện: Thêm nút “Bình luận”, hiện lịch sử bình luận bên dưới từng todo.
 
-Hoặc gán Tag tự tạo: @read, @urgent...
+3. Tải file đính kèm (Attachment)
+Cho phép upload các file tài liệu, ảnh, v.v… kèm công việc.
 
-⭐ 1.4. Đánh dấu mức độ ưu tiên (priority)
-Cao, Trung bình, Thấp
+Hiển thị danh sách file đính kèm và cho phép tải xuống.
 
-Sắp xếp Todo theo mức ưu tiên
+4. Nhắc deadline qua email/notification
+Gửi email hoặc notification đến người được giao khi sắp tới deadline, hoặc khi công việc vừa được giao.
 
-🔄 2. Cải Thiện Tương Tác & Trải Nghiệm
-📅 2.1. Lọc và tìm kiếm
-Tìm todo theo tên
+5. Lọc, tìm kiếm, phân loại
+Lọc theo trạng thái, mức độ ưu tiên, người thực hiện, ngày đến hạn…
 
-Bộ lọc theo trạng thái: đã hoàn thành / chưa hoàn thành
+Thanh tìm kiếm nhanh tiêu đề công việc.
 
-Lọc theo ngày tạo hoặc deadline
+6. History/Log thay đổi công việc
+Theo dõi ai đã sửa gì, khi nào. Xem lại lịch sử chỉnh sửa.
 
-⏳ 2.2. Thống kê
-Tổng todo
+7. Check list con (Subtask)
+Mỗi công việc có thể có nhiều task con nhỏ hơn (checklist).
 
-Bao nhiêu đã hoàn thành / chưa hoàn thành
+Tiện theo dõi tiến độ công việc lớn.
 
-Tiến độ hôm nay (%)
+8. Giao diện kéo thả (drag & drop) trạng thái
+Ví dụ: Kanban board, kéo công việc sang “Đang làm”, “Chờ feedback”, “Hoàn thành”…
 
-🔔 2.3. Thông báo (Notification)
-Gợi ý “Bạn có 3 việc hôm nay cần làm”
+9. Thông báo real-time (web notification, Pusher, ...)
+Khi có ai đó giao việc cho bạn, bình luận, hoàn thành, cập nhật trạng thái, sẽ có notification trên web/app.
 
-Gửi email nếu công việc quá hạn (dùng Laravel Scheduler)
+10. Dashboard tổng quan (Stats)
+Thống kê: bao nhiêu việc đã hoàn thành, đang chờ, quá hạn, mỗi người làm được bao nhiêu việc, v.v...
 
-👥 3. Mở rộng theo người dùng (nhiều user)
-🔐 3.1. Xác thực nâng cao
-Thêm xác thực email
-
-Reset mật khẩu
-
-Avatar, bio cá nhân
-
-🗂 3.2. Dashboard riêng mỗi người
-Mỗi user chỉ thấy todo của mình (bạn đã có)
-
-Thêm ảnh đại diện người dùng
-
-🖼 4. Giao diện nâng cao
-🌓 4.1. Dark Mode
-Tự đổi sáng/tối dựa theo giờ hoặc nút gạt
-
-💡 4.2. Responsive + Mobile Friendly
-Dùng Tailwind’s responsive class (sm:, md:) cho giao diện đẹp trên điện thoại
-
-📊 4.3. Biểu đồ
-Tiến độ công việc dưới dạng biểu đồ (dùng Chart.js)
-
-☁️ 5. Tính năng nâng cao
-☑ 5.1. Todo dạng checklist
-Mỗi todo chứa checklist nhỏ: “Học Laravel” gồm “Cài môi trường, Auth, CRUD”
-
-👥 5.2. Chia sẻ Todo
-Cho phép chia sẻ công việc với người khác (team)
-
-📁 5.3. Tệp đính kèm
-Cho phép đính kèm tài liệu (PDF, ảnh...) vào từng việc

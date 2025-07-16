@@ -30,6 +30,18 @@
         >{{ old('detail', $todo->detail ?? '') }}</textarea>
     </div>
     <div>
+    <label class="font-semibold block mb-1">Giao cho</label>
+    <select name="assigned_to" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <option value="">-- Chọn thành viên --</option>
+        @foreach($users as $user)
+            <option value="{{ $user->id }}" {{ (old('assigned_to', $todo->assigned_to ?? '') == $user->id) ? 'selected' : '' }}>
+                {{ $user->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+    <div>
         <label class="font-semibold block mb-1">Mức độ ưu tiên</label>
         <select name="priority" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-400">
             <option value="Low" {{ old('priority', $todo->priority ?? '') == 'Low' ? 'selected' : '' }}>Thấp</option>

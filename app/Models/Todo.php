@@ -12,10 +12,14 @@ class Todo extends Model
         'deadline'  => 'datetime', 
         'completed' => 'boolean',
     ];
-    
+    // app/Models/Todo.php
     public function user(){
         
         return $this->belongsTo(User::class);//Xác định quan hệ: mỗi công việc (Todo) thuộc về một người dùng (User).
     }
     use HasFactory;
+    
+    public function assignee() {
+        return $this->belongsTo(User::class, 'assigned_to');
+    } 
 }
