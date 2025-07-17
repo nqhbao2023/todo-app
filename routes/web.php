@@ -30,6 +30,10 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/todos/{id}', [TodoController::class, 'delete'])->name('todos.delete');
     Route::put('/todos/{id}', [TodoController::class, 'update'])->name('todos.update');
     Route::get('/todos/{id}/edit', [TodoController::class, 'edit'])->name('todos.edit');
+   
+    Route::get('/todos/{todo}/progress', [TodoController::class, 'progressForm'])->name('todos.progress.form');
+    Route::post('/todos/{todo}/progress', [TodoController::class, 'storeProgress'])->name('todos.progress.store');
+
 });
 
 //User

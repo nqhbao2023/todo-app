@@ -22,4 +22,32 @@ class Todo extends Model
     public function assignee() {
         return $this->belongsTo(User::class, 'assigned_to');
     } 
+
+    public function progresses()
+    {
+        return $this->hasMany(TodoProgress::class);
+    }
+    
+    // Tổng số đã làm được cho todo này
+    public function getTotalProgressAttribute()
+    {
+        return $this->progresses->sum('quantity');
+    }
+    
+    // Tính % tiến độ so với mục tiêu
+    public function getPercentProgressAttribute()
+    {
+        if ($this->kpi_target > 0) {
+            return round($this->total_progress / $this->kpi_target * 100, 1);
+        }
+        return 0;
+    }
+    
+    // Kiểm tra đã hoàn thành chưa
+    public function getIsCompletedKpiAttribute()
+    {
+        return $this->total_progress >= $this->kpi_target;
+    }
+    
+    
 }
