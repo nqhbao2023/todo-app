@@ -38,6 +38,25 @@
                 {{ $v }}
             </a>
         @endforeach
+            <a href="{{ route('dashboard', ['tab' => 'my_assigned']) }}"
+            class="block px-4 py-2 rounded font-medium transition {{ (isset($tab) && $tab=='my_assigned') ? 'bg-teal-500 text-white' : 'text-gray-700 hover:bg-teal-100' }}">
+                Công việc của tôi
+            </a>
+
+            <a href="{{ route('dashboard', ['tab' => 'cancelled']) }}"
+            class="block px-4 py-2 rounded font-medium transition {{ (isset($tab) && $tab=='cancelled') ? 'bg-gray-500 text-white' : 'text-gray-700 hover:bg-gray-200' }}">
+                Việc đã huỷ
+            </a>
+
+            <a href="{{ route('dashboard', ['tab' => 'overdue']) }}"
+            class="block px-4 py-2 rounded font-medium transition {{ (isset($tab) && $tab=='overdue') ? 'bg-red-500 text-white' : 'text-gray-700 hover:bg-red-100' }}">
+                Công việc quá hạn
+            </a>
+            
+            <a href="{{ route('dashboard', ['tab' => 'report']) }}"
+            class="block px-4 py-2 rounded font-medium transition {{ (isset($tab) && $tab=='report') ? 'bg-yellow-400 text-white' : 'text-gray-700 hover:bg-yellow-100' }}">
+                Thống kê & Báo cáo
+            </a>
 
         <!-- Nút Thêm công việc -->
         <a 
@@ -61,18 +80,60 @@
         <h2 class="text-2xl font-bold mb-6 text-center">Todo List</h2>
         <div class="overflow-x-auto rounded-xl shadow border border-gray-200 bg-white mt-8">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="p-3 text-xs text-gray-500 font-bold text-center w-12">#</th>
-                        <th class="p-3 text-xs text-gray-500 font-bold text-center">Tên công việc</th>
-                        <th class="p-3 text-xs text-gray-500 font-bold text-center">Chỉ định cho</th>
-                        <th class="p-3 text-xs text-gray-500 font-bold text-center">KPI/Tiến độ</th> 
-                        <th class="p-3 text-xs text-gray-500 font-bold text-center">Trạng thái</th>
-                        <th class="p-3 text-xs text-gray-500 font-bold text-center">Mức độ ưu tiên</th>
-                        <th class="p-3 text-xs text-gray-500 font-bold text-center">Thao tác</th>
-                        
-                    </tr>
-                </thead>
+                
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="p-3 text-xs text-gray-500 font-bold text-center w-12">#</th>
+
+                    {{-- Tên công việc --}}
+                    <th class="p-3 text-xs text-gray-500 font-bold text-center">
+                        <a href="{{ route('dashboard', array_merge(request()->all(), ['sort' => 'title', 'direction' => (request('sort') == 'title' && request('direction') == 'asc') ? 'desc' : 'asc'])) }}">
+                            Tên công việc
+                            @if(request('sort') == 'title')
+                                @if(request('direction') == 'asc') ▲ @else ▼ @endif
+                            @endif
+                        </a>
+                    </th>
+
+                    {{-- Chỉ định cho --}}
+                    <th class="p-3 text-xs text-gray-500 font-bold text-center">
+                        <a href="{{ route('dashboard', array_merge(request()->all(), ['sort' => 'assigned_to', 'direction' => (request('sort') == 'assigned_to' && request('direction') == 'asc') ? 'desc' : 'asc'])) }}">
+                            Chỉ định cho
+                            @if(request('sort') == 'assigned_to')
+                                @if(request('direction') == 'asc') ▲ @else ▼ @endif
+                            @endif
+                        </a>
+                    </th>
+
+                    {{-- KPI/Tiến độ --}}
+                    <th class="p-3 text-xs text-gray-500 font-bold text-center">
+                        KPI/Tiến độ
+                    </th>
+
+                    {{-- Trạng thái --}}
+                    <th class="p-3 text-xs text-gray-500 font-bold text-center">
+                        <a href="{{ route('dashboard', array_merge(request()->all(), ['sort' => 'status', 'direction' => (request('sort') == 'status' && request('direction') == 'asc') ? 'desc' : 'asc'])) }}">
+                            Trạng thái
+                            @if(request('sort') == 'status')
+                                @if(request('direction') == 'asc') ▲ @else ▼ @endif
+                            @endif
+                        </a>
+                    </th>
+
+                    {{-- Mức độ ưu tiên --}}
+                    <th class="p-3 text-xs text-gray-500 font-bold text-center">
+                        <a href="{{ route('dashboard', array_merge(request()->all(), ['sort' => 'priority', 'direction' => (request('sort') == 'priority' && request('direction') == 'asc') ? 'desc' : 'asc'])) }}">
+                            Mức độ ưu tiên
+                            @if(request('sort') == 'priority')
+                                @if(request('direction') == 'asc') ▲ @else ▼ @endif
+                            @endif
+                        </a>
+                    </th>
+
+                    <th class="p-3 text-xs text-gray-500 font-bold text-center">Thao tác</th>
+                </tr>
+            </thead>
+
                 <tbody class="divide-y divide-gray-100">
 
             @foreach ($todos as $i => $t)

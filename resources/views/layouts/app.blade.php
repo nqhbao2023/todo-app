@@ -21,7 +21,7 @@
             @yield('content')
         </main>
         <footer class="py-4 text-center text-xs text-muted-foreground mt-10">
-            © {{ date('Y') }} Todo App. Powered by Laravel & Tailwind.
+            © {{ date('Y') }} 
         </footer>
     </div>
 </body>

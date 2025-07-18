@@ -12,41 +12,64 @@ class TodoController extends Controller
 {
     // Trang danh sách todo
     public function index(Request $request)
-    {
-        $tab = $request->get('tab', 'all');
-        // Lấy tất cả todo liên quan tới user (là người tạo hoặc được giao)
-        $todos = Todo::with('assignee')
-            ->where(function ($q) {
-                $q->where('user_id', Auth::id())
-                  ->orWhere('assigned_to', Auth::id());
-            });
-            
+{
+    $tab = $request->get('tab', 'all');
+    $sort = $request->input('sort', 'deadline');
+    $direction = strtolower($request->input('direction', 'asc')) == 'desc' ? 'desc' : 'asc';
 
-        switch ($tab) {
-            case 'today':
-                $todos = $todos->where('completed', false)
-                               ->whereDate('deadline', now()->toDateString());
-                break;
-            case 'upcoming':
-                $todos = $todos->where('completed', false)
-                               ->whereDate('deadline', '>', now()->toDateString());
-                break;
-            case 'done':
-                $todos = $todos->where('completed', true);
-                break;
-            default:
-                $todos = $todos->where('completed', false);
-                break;
-        }
+    // Lấy tất cả todo liên quan tới user (là người tạo hoặc được giao)
+    $todos = Todo::with('assignee')
+        ->where(function ($q) {
+            $q->where('user_id', Auth::id())
+              ->orWhere('assigned_to', Auth::id());
+        });
 
-        $todos = $todos
-            ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('deadline', 'asc')
-            ->paginate(10);
-
-        $users = User::all(); // Để dùng cho dropdown filter hoặc phân công
-        return view('dashboard', compact('todos', 'tab', 'users'));
+    // Filter theo tab
+    switch ($tab) {
+        case 'today':
+            $todos = $todos->where('completed', false)
+                           ->whereDate('deadline', now()->toDateString());
+            break;
+        case 'upcoming':
+            $todos = $todos->where('completed', false)
+                           ->whereDate('deadline', '>', now()->toDateString());
+            break;
+        case 'done':
+            $todos = $todos->where('completed', true);
+            break;
+        default:
+            $todos = $todos->where('completed', false);
+            break;
     }
+
+    // Các cột được phép sort
+    $sortable = [
+        'title',
+        'assigned_to',
+        'status',
+        'priority',
+        'deadline'
+    ];
+
+    // Áp dụng sort
+    if ($sort == 'priority') {
+        $todos = $todos->orderByRaw(
+            "FIELD(priority, 'Urgent', 'High', 'Normal', 'Low') $direction"
+        );
+    } elseif (in_array($sort, $sortable)) {
+        $todos = $todos->orderBy($sort, $direction);
+    } else {
+        $todos = $todos->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END')
+                       ->orderBy('deadline', 'asc');
+    }
+
+    $todos = $todos->paginate(10);
+
+    $users = User::all();
+    return view('dashboard', compact('todos', 'tab', 'users'));
+}
+
+    
 
     // Hiển thị form tạo công việc
     public function create()

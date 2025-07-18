@@ -10,7 +10,7 @@
             @include('partials.todo_form', ['todo' => $todo])
             
                 <div class="mb-4">
-                    <label class="block">Mục tiêu KPI (ví dụ: 50)</label>
+                    <label class="block">Mục tiêu KPI</label>
                     <input type="number" name="kpi_target" class="border rounded px-3 py-2 w-full" min="1" value="{{ old('kpi_target', $todo->kpi_target ?? '') }}">
                 </div>
 
