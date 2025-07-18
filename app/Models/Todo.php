@@ -19,15 +19,15 @@ class Todo extends Model
     }
     use HasFactory;
     
-    public function assignee() {
-        return $this->belongsTo(User::class, 'assigned_to');
-    } 
+ 
 
     public function progresses()
     {
         return $this->hasMany(TodoProgress::class);
     }
-    
+       public function assignee() {
+        return $this->belongsTo(User::class, 'assigned_to');
+    } 
     // Tổng số đã làm được cho todo này
     public function getTotalProgressAttribute()
     {

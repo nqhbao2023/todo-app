@@ -3,6 +3,8 @@
 @section('title', 'Todo List')
 
 @section('content')
+
+
 @php
     $statusList = [
         'Chưa làm'        => 'bg-gray-200 text-gray-800',
@@ -20,7 +22,7 @@
     ];
 @endphp
 
-<div class="max-w-5xl mx-auto flex bg-white rounded-xl shadow-md min-h-[80vh]">
+<div class="max-w-9xl mx-auto flex bg-white rounded-xl shadow-md min-h-[80vh]">
 
     <!-- Sidebar -->
     <aside class="w-60 border-r px-4 py-8 flex flex-col bg-gray-50 rounded-l-xl h-[80vh]">
@@ -63,7 +65,7 @@
                     <tr>
                         <th class="p-3 text-xs text-gray-500 font-bold text-center w-12">#</th>
                         <th class="p-3 text-xs text-gray-500 font-bold text-center">Tên công việc</th>
-                        <th class="p-3 text-xs text-gray-500 font-bold text-center">Giao cho</th>
+                        <th class="p-3 text-xs text-gray-500 font-bold text-center">Chỉ định cho</th>
                         <th class="p-3 text-xs text-gray-500 font-bold text-center">KPI/Tiến độ</th> 
                         <th class="p-3 text-xs text-gray-500 font-bold text-center">Trạng thái</th>
                         <th class="p-3 text-xs text-gray-500 font-bold text-center">Mức độ ưu tiên</th>
@@ -76,9 +78,17 @@
             @foreach ($todos as $i => $t)
                 <tr class="hover:bg-gray-50 transition">
                     <td class="p-3 text-center text-gray-500 font-semibold">{{ $i + 1 }}</td>
-                    <td class="p-3 font-medium {{ $t->completed ? 'line-through text-gray-400' : 'text-gray-900' }}">
-                        {{ $t->title }}
-                    </td>
+                    <!-- Cột Tên công việc -->
+                <td class="p-3 font-medium {{ $t->completed ? 'line-through text-gray-400' : 'text-gray-900' }}">
+                    {{ $t->title }}
+                    @php
+                        $isOverdue = !$t->completed && $t->deadline && \Carbon\Carbon::parse($t->deadline)->lt(now());
+                    @endphp
+                    @if($isOverdue)
+                        <span class="ml-2 px-2 py-1 rounded bg-red-100 text-red-600 text-xs font-bold animate-pulse">ĐÃ QUÁ HẠN</span>
+                    @endif
+                </td>
+
                     <td class="p-3 text-center">
                         @if ($t->assignee)
                             <span class="px-2 py-1 rounded bg-gray-100 text-gray-800 text-xs">

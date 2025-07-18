@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <title>@yield('title', 'Todo App')</title>
     @vite('resources/css/app.css')
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
+
 <body class="bg-background min-h-screen font-sans antialiased">
     <div class="min-h-screen bg-muted/50 flex flex-col">
         <header class="w-full py-5 shadow-sm bg-white/80 backdrop-blur border-b border-gray-200 mb-8">
