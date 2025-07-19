@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('todos', function (Blueprint $table) {
             $table->unsignedBigInteger('assigned_to')->nullable()->after('user_id');
-            $table->foreign('assigned_to')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('assigned_to')->references('id')->on('users')->onDelete('set null'); //neu user bị xóa thì set nullnull
         });
     }
     public function down()

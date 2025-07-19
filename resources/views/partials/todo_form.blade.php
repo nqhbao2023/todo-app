@@ -31,6 +31,8 @@
     </div>
     <div>
     <label class="font-semibold block mb-1">Giao cho</label>
+    
+    {{-- tạo một select để chọn thành viên --}}
     <select name="assigned_to" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
         <option value="">-- Chọn thành viên --</option>
         @foreach($users as $user)
