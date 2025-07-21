@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
    
     Route::get('/todos/{todo}/progress', [TodoController::class, 'progressForm'])->name('todos.progress.form');
     Route::post('/todos/{todo}/progress', [TodoController::class, 'storeProgress'])->name('todos.progress.store');
+    Route::post('/todos/{todo}/update-status', [TodoController::class, 'updateStatus'])->name('todos.updateStatus');
 
 });
 
@@ -46,3 +47,5 @@ Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 
 // Trang tạo mới công việc (hiển thị form)
 Route::get('/todos/create', [TodoController::class, 'create'])->name('todos.create');
+//update trạng thái
+

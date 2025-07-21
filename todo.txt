@@ -1,3 +1,52 @@
+1. Giữ bảng chính (dashboard) thật gọn, chỉ 5 trường:
+Tên công việc (bấm vào sẽ xem popup/detail đầy đủ)
+
+Chỉ định cho
+
+Trạng thái
+
+Ưu tiên
+
+Tài liệu (icon/link)
+
+Thao tác
+
+⚡ Không hiển thị các trường như KPI, tiến độ, deadline, chi tiết trên bảng chính nữa!
+
+2. Chuyển tất cả trường phụ vào giao diện chi tiết (popup/modal/detail page)
+Khi bấm vào tên công việc hoặc icon "xem", sẽ mở popup/modal (hoặc sang trang detail) với đầy đủ:
+
+Mục tiêu KPI & tiến độ
+
+Deadline
+
+Chi tiết/mô tả
+
+Lịch sử thay đổi, comment, tài liệu đính kèm...
+
+3. Tổ chức sidebar (tab) theo nhóm công việc, KHÔNG theo trường dữ liệu
+Trang chủ (dashboard): chỉ show các trường chính ở trên.
+
+Các tab khác (công việc hôm nay, sắp tới, quá hạn, KPI, thống kê) chỉ là bộ lọc – bảng vẫn luôn gọn gàng.
+
+Lý do chọn giải pháp này:
+Nhanh, dễ nhìn, tập trung vào thao tác chính – đúng như các app hiện đại (Jira, Trello, Asana).
+
+Không làm người dùng “choáng” khi phải đọc quá nhiều thông tin trên 1 màn hình.
+
+Các trường phụ vẫn tra cứu, nhập liệu rất dễ trong popup/detail.
+
+Tóm tắt cách làm:
+Dashboard chỉ còn các trường quan trọng nhất, thao tác nhanh.
+
+Bấm vào tên công việc để mở ra chi tiết đầy đủ.
+
+Sidebar chỉ là filter nhóm việc, không cần chuyển trường dữ liệu qua tab.
+
+
+
+
+
 1. Phân công công việc cho thành viên
 Thêm cột/field "Người được giao" (assignee).
 
