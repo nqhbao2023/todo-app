@@ -73,7 +73,10 @@ class TodoController extends Controller
     public function create()
     {
         $users = User::all();
-        return view('todos.create', compact('users'));
+        $deadlineVal = old('deadline', null);
+        $repeatVal = old('repeat', null);
+        $repeatCustom = old('repeat_custom', null);
+        return view('todos.create', compact('users', 'deadlineVal', 'repeatVal', 'repeatCustom'));
     }
 
     // Xử lý thêm mới todo
@@ -123,7 +126,13 @@ class TodoController extends Controller
         $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         $users = User::all();
         $tab = $request->get('tab', 'all');
-        return view('todos.edit', compact('todo', 'users', 'tab'));
+
+        $deadlineVal = old('deadline', $todo->deadline ?? null);
+        $repeatVal = old('repeat', $todo->repeat ?? null);
+        $repeatCustom = old('repeat_custom', null);
+        return view('todos.edit', compact('todo', 'users', 'tab', 'deadlineVal', 'repeatVal', 'repeatCustom'));
+
+        
     }
 
     // Xử lý cập nhật todo
@@ -144,7 +153,6 @@ class TodoController extends Controller
             'attachment_link' => 'nullable|url|max:500',
             'repeat' => 'nullable|string|max:50',
             'repeat_custom' => 'nullable|string|max:100',
-            ''=> '',
         ]);
 
         $deadline = $request->input('deadline');

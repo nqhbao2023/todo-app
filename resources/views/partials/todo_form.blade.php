@@ -7,9 +7,6 @@
         'Hoàn thành'      => 'bg-green-600 text-white',
         'Đã huỷ'          => 'bg-gray-400 text-white',
     ];
-    function formValue($name, $model = null, $default = '') {
-        return old($name, $model ? $model->$name ?? $default : $default);
-    }
 @endphp
 
 <div class="space-y-5">
