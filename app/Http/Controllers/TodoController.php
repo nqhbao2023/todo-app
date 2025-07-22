@@ -144,6 +144,7 @@ class TodoController extends Controller
             'attachment_link' => 'nullable|url|max:500',
             'repeat' => 'nullable|string|max:50',
             'repeat_custom' => 'nullable|string|max:100',
+            ''=> '',
         ]);
 
         $deadline = $request->input('deadline');
