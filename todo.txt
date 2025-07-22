@@ -1,3 +1,8 @@
+
+UI vers
+
+thông báo hôm nay nên làm bao nhiêu
+
 1. Giữ bảng chính (dashboard) thật gọn, chỉ 5 trường:
 Tên công việc (bấm vào sẽ xem popup/detail đầy đủ)
 
