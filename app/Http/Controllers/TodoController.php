@@ -79,6 +79,10 @@ class TodoController extends Controller
     // Xử lý thêm mới todo
     public function add(Request $request)
     {
+        if ($request->input('deadline') === 'none' || empty($request->input('deadline'))) {
+            $request->merge(['deadline' => null]);
+        }
+    
         $request->validate([
             'title' => 'required',
             'deadline' => 'nullable|date',
@@ -88,7 +92,14 @@ class TodoController extends Controller
             'assigned_to' => 'nullable|exists:users,id',
             'kpi_target' => 'nullable|integer|min:1',
             'attachment_link' => 'nullable|string',
+            'repeat' => 'nullable|string|max:50',
+            'repeat_custom' => 'nullable|string|max:100',
         ]);
+     $repeat = $request->input('repeat');
+        if ($repeat === 'custom') {
+            $repeat = $request->input('repeat_custom');
+        }
+
 
         Todo::create([
             'user_id'     => Auth::id(),
@@ -101,8 +112,8 @@ class TodoController extends Controller
             'detail'      => $request->input('detail'),
             'completed'   => false,
             'attachment_link' => $request->input('attachment_link'),
+            'repeat'      => $repeat,
         ]);
-
         return redirect()->route('dashboard')->with('success', 'Thêm công việc thành công!');
     }
 
@@ -118,6 +129,10 @@ class TodoController extends Controller
     // Xử lý cập nhật todo
     public function update(Request $request, $id)
     {
+        if ($request->input('deadline') === 'none' || empty($request->input('deadline'))) {
+            $request->merge(['deadline' => null]);
+        }
+    
         $request->validate([
             'title' => 'required',
             'priority' => 'required|string',
@@ -127,17 +142,31 @@ class TodoController extends Controller
             'assigned_to' => 'nullable|exists:users,id',
             'kpi_target' => 'nullable|integer|min:1',
             'attachment_link' => 'nullable|url|max:500',
+            'repeat' => 'nullable|string|max:50',
+            'repeat_custom' => 'nullable|string|max:100',
         ]);
 
+        $deadline = $request->input('deadline');
+        if ($deadline === 'none' || empty($deadline)) {
+            $deadline = null;
+        }
+
+
         $todo = Todo::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+
+        $repeat = $request->input('repeat');
+        if ($repeat === 'custom') {
+            $repeat = $request->input('repeat_custom');
+        }
         $todo->title = $request->input('title');
-        $todo->deadline = $request->input('deadline');
+        $todo->deadline = $deadline;
         $todo->priority = $request->input('priority') ?? 'Normal';
         $todo->status = $request->input('status');
         $todo->detail = $request->input('detail');
         $todo->assigned_to = $request->input('assigned_to');
         $todo->kpi_target = $request->input('kpi_target');
         $todo->attachment_link = $request->input('attachment_link');
+        $todo->repeat = $repeat; 
         $todo->save();
 
         return redirect()->route('dashboard');

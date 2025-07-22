@@ -247,53 +247,55 @@
         </div>
 
         <!-- Modal chi tiết công việc -->
-        <div 
-            x-show="showModal" x-cloak
-            class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-            @keydown.escape.window="closeModal()"
-            @click.self="closeModal()"
-        >
-            <div class="bg-white max-w-xl w-full rounded-xl p-6 shadow-2xl relative animate-fadeIn" @click.stop>
-                <button @click="closeModal()" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-red-500">&times;</button>
-                <template x-if="selectedTodo">
-                    <div>
-                        <h2 class="text-xl font-bold mb-3 text-blue-600" x-text="selectedTodo.title"></h2>
-                        <div class="mb-2"><strong>Chỉ định cho:</strong> <span x-text="selectedTodo.assignee?.name ?? 'Chưa giao'"></span></div>
-                        <div class="mb-2"><strong>Trạng thái:</strong> <span x-text="selectedTodo.status"></span></div>
-                        <div class="mb-2">
-                            <strong>Ưu tiên:</strong>
-                            <span
-                                x-text="priorityText(selectedTodo.priority)"
-                                :class="priorityClass(selectedTodo.priority)">
-                            </span>
-                        </div>
-                        <div class="mb-2"><strong>Deadline:</strong>
-                            <span x-text="formatDate(selectedTodo.deadline)"></span>
-                        </div>
-                        <div class="mb-2"><strong>KPI:</strong> <span x-text="selectedTodo.kpi_target ?? 'Không đặt'"></span></div>
-                        <div class="mb-2">
-                            <strong>Tiến độ:</strong>
-                            <span x-text="selectedTodo.total_progress ?? 0"></span>
-                            <template x-if="selectedTodo.kpi_target">
-                                <span>
-                                    / <span x-text="selectedTodo.kpi_target"></span>
-                                    (<span x-text="percentProgress(selectedTodo)"></span>%)
-                                </span>
-                            </template>
-                        </div>
-                        <div class="mb-2"><strong>Chi tiết:</strong> <span x-text="selectedTodo.detail ?? 'Không có'"></span></div>
-                        <div class="mb-2"><strong>Tài liệu:</strong>
-                            <template x-if="selectedTodo.attachment_link">
-                                <a :href="selectedTodo.attachment_link" target="_blank" class="text-blue-600 hover:underline">Mở tài liệu</a>
-                            </template>
-                            <template x-if="!selectedTodo.attachment_link">
-                                <span class="text-gray-400">Không có</span>
-                            </template>
-                        </div>
-                    </div>
-                </template>
+        <div x-show="showModal" x-cloak
+    class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+    @keydown.escape.window="closeModal()"
+    @click.self="closeModal()"
+>
+    <div class="bg-white max-w-xl w-full rounded-xl p-6 shadow-2xl relative animate-fadeIn" @click.stop>
+        <button @click="closeModal()" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-red-500">&times;</button>
+        <template x-if="selectedTodo">
+            <div>
+                <h2 class="text-xl font-bold mb-3 text-blue-600" x-text="selectedTodo.title"></h2>
+                <div class="mb-2"><strong>Chỉ định cho:</strong> <span x-text="selectedTodo.assignee?.name ?? 'Chưa giao'"></span></div>
+                <div class="mb-2"><strong>Trạng thái:</strong> <span x-text="selectedTodo.status"></span></div>
+                <div class="mb-2">
+                    <strong>Ưu tiên:</strong>
+                    <span
+                        x-text="priorityText(selectedTodo.priority)"
+                        :class="priorityClass(selectedTodo.priority)">
+                    </span>
+                </div>
+                <div><strong>Lặp lại:</strong> <span x-text="selectedTodo.repeat ?? 'Không lặp'"></span></div>
+
+                <div class="mb-2"><strong>Deadline:</strong>
+                    <span x-text="formatDate(selectedTodo.deadline)"></span>
+                </div>
+                <div class="mb-2"><strong>KPI:</strong> <span x-text="selectedTodo.kpi_target ?? 'Không đặt'"></span></div>
+                <div class="mb-2">
+                    <strong>Tiến độ:</strong>
+                    <span x-text="selectedTodo.total_progress ?? 0"></span>
+                    <template x-if="selectedTodo.kpi_target">
+                        <span>
+                            / <span x-text="selectedTodo.kpi_target"></span>
+                            (<span x-text="percentProgress(selectedTodo)"></span>%)
+                        </span>
+                    </template>
+                </div>
+                <div class="mb-2"><strong>Chi tiết:</strong> <span x-text="selectedTodo.detail ?? 'Không có'"></span></div>
+                <div class="mb-2"><strong>Tài liệu:</strong>
+                    <template x-if="selectedTodo.attachment_link">
+                        <a :href="selectedTodo.attachment_link" target="_blank" class="text-blue-600 hover:underline">Mở tài liệu</a>
+                    </template>
+                    <template x-if="!selectedTodo.attachment_link">
+                        <span class="text-gray-400">Không có</span>
+                    </template>
+                </div>
             </div>
-        </div>
+        </template>
+    </div>
+</div>
+
         <!-- /Modal -->
     </div>
 </div>

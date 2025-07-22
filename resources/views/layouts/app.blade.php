@@ -7,9 +7,6 @@
 
     <title>@yield('title', 'Todo App')</title>
     @vite('resources/css/app.css')
-
-
-
 </head>
 
 <body class="bg-background min-h-screen font-sans antialiased">
@@ -17,7 +14,6 @@
         <header class="w-full py-5 shadow-sm bg-white/80 backdrop-blur border-b border-gray-200 mb-8">
             <div class="container mx-auto px-4 flex justify-between items-center">
                 <h1 class="font-bold text-xl tracking-tight text-gray-900">Todo App</h1>
-        
             </div>
         </header>
         <main class="flex-1 container mx-auto px-4">
@@ -28,6 +24,9 @@
             © {{ date('Y') }} 
         </footer>
     </div>
+    <!-- Import AlpineJS -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+
 </body>
 </html>
