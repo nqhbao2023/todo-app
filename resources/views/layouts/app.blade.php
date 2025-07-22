@@ -17,7 +17,6 @@
             </div>
         </header>
         <main class="flex-1 container mx-auto px-4">
-            @include('partials.flash_message')
             @yield('content')
         </main>
         <footer class="py-4 text-center text-xs text-muted-foreground mt-10">

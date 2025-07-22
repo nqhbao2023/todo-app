@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $completed
  * @property int $id
   * @property string|null $attachment_link
+    * @property string|null $repeat
+    * @property bool $important
 
  */
 class Todo extends Model
@@ -34,7 +36,10 @@ class Todo extends Model
         'deadline',
         'priority',
         'status',
-        'detail'
+        'detail',
+        'repeat',
+        'important',
+        'repeat_custom' 
     ];
 
     protected $casts = [

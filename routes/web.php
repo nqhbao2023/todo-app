@@ -23,17 +23,25 @@ Route::get('/', function () {
 
 // Authenticated routes
 Route::middleware(['auth'])->group(function () {
+    // web.php
 
     Route::get('/dashboard', [TodoController::class, 'index'])->name('dashboard');
     Route::post('/todos', [TodoController::class, 'add'])->name('todos.add');
     Route::post('/todos/{id}/toggle', [TodoController::class, 'markDone'])->name('todos.toggle');
     Route::delete('/todos/{id}', [TodoController::class, 'delete'])->name('todos.delete');
+    // Thêm mới route này
+    Route::post('/todos/{id}/delete', [TodoController::class, 'delete'])->name('todos.delete.ajax');
+
     Route::put('/todos/{id}', [TodoController::class, 'update'])->name('todos.update');
     Route::get('/todos/{id}/edit', [TodoController::class, 'edit'])->name('todos.edit');
    
     Route::get('/todos/{todo}/progress', [TodoController::class, 'progressForm'])->name('todos.progress.form');
     Route::post('/todos/{todo}/progress', [TodoController::class, 'storeProgress'])->name('todos.progress.store');
     Route::post('/todos/{todo}/update-status', [TodoController::class, 'updateStatus'])->name('todos.updateStatus');
+
+    // Route POST đổi tầm quan trọng (ngôi sao)
+    Route::post('/todos/{id}/toggle-importance', [\App\Http\Controllers\TodoController::class, 'toggleImportance'])
+    ->name('todos.toggleImportance');
 
 });
 
