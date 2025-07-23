@@ -7,6 +7,10 @@
 
     <title>@yield('title', 'Todo App')</title>
     @vite('resources/css/app.css')
+    <style>
+    [x-cloak] { display: none !important; }
+</style>
+
 </head>
 
 <body class="bg-background min-h-screen font-sans antialiased">

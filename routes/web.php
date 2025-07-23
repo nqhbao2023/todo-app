@@ -40,7 +40,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/todos/{todo}/update-status', [TodoController::class, 'updateStatus'])->name('todos.updateStatus');
 
     // Route POST đổi tầm quan trọng (ngôi sao)
-    Route::post('/todos/{id}/toggle-importance', [\App\Http\Controllers\TodoController::class, 'toggleImportance'])
+    Route::post('/todos/{id}/toggle-importance', [TodoController::class, 'toggleImportance'])
     ->name('todos.toggleImportance');
 
 });
