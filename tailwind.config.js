@@ -1,10 +1,10 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
+import daisyui from 'daisyui';
 
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [
-
         './resources/**/*.blade.php',
         './resources/**/*.js',
         './resources/**/*.vue',
@@ -20,5 +20,12 @@ export default {
         },
     },
 
-    plugins: [forms],
+    plugins: [
+        forms,
+        daisyui,
+    ],
+
+    daisyui: {
+        themes: ["light", "dark"], // chỉ bật 2 theme này
+    },
 };

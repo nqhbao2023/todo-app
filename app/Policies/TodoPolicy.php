@@ -13,7 +13,7 @@ class TodoPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true; // Cho phép mọi user xem
     }
 
     /**
@@ -21,7 +21,7 @@ class TodoPolicy
      */
     public function view(User $user, Todo $todo): bool
     {
-        //
+        return $user->id == $todo->user_id;
     }
 
     /**
@@ -29,7 +29,7 @@ class TodoPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true; // Cho phép mọi user tạo
     }
 
     /**
@@ -37,8 +37,7 @@ class TodoPolicy
      */
     public function update(User $user, Todo $todo): bool
     {
-        return $user ->id == $todo -> user_id;
-
+        return $user->id == $todo->user_id;
     }
 
     /**
@@ -46,7 +45,7 @@ class TodoPolicy
      */
     public function delete(User $user, Todo $todo): bool
     {
-        return $user ->id == $todo->user_id;
+        return $user->id == $todo->user_id;
     }
 
     /**
@@ -54,7 +53,7 @@ class TodoPolicy
      */
     public function restore(User $user, Todo $todo): bool
     {
-        //
+        return $user->id == $todo->user_id;
     }
 
     /**
@@ -62,6 +61,6 @@ class TodoPolicy
      */
     public function forceDelete(User $user, Todo $todo): bool
     {
-        //
+        return $user->id == $todo->user_id;
     }
 }

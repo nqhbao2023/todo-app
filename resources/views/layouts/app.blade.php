@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', 'Todo App')</title>
+    @viteReactRefresh
     @vite('resources/css/app.css')
     <style>
     [x-cloak] { display: none !important; }
@@ -18,6 +19,13 @@
         <header class="w-full py-5 shadow-sm bg-white/80 backdrop-blur border-b border-gray-200 mb-8">
             <div class="container mx-auto px-4 flex justify-between items-center">
                 <h1 class="font-bold text-xl tracking-tight text-gray-900">Todo App</h1>
+                <button
+                    id="toggle-dark"
+                    class="btn btn-primary"
+                    type="button"
+                >
+                    Bật/Tắt Dark Mode
+                </button>
             </div>
         </header>
         <main class="flex-1 container mx-auto px-4">
@@ -29,5 +37,21 @@
     </div>
     <!-- Import AlpineJS -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lấy theme đã lưu (nếu có)
+    const saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+    // Bắt sự kiện click
+    document.getElementById('toggle-dark').addEventListener('click', function() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    });
+});
+</script>
 </body>
 </html>
