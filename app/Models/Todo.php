@@ -39,7 +39,8 @@ class Todo extends Model
         'detail',
         'repeat',
         'important',
-        'repeat_custom' 
+        'repeat_custom',
+        'flagged',
     ];
 
     protected $casts = [

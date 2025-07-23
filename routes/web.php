@@ -23,6 +23,8 @@ Route::get('/', function () {
 
 // Authenticated routes
 Route::middleware(['auth'])->group(function () {
+    Route::post('/todos/{todo}/progress', [TodoController::class, 'saveProgress'])->name('todos.progress.save');
+
     // web.php
 
     Route::get('/dashboard', [TodoController::class, 'index'])->name('dashboard');
@@ -42,6 +44,10 @@ Route::middleware(['auth'])->group(function () {
     // Route POST đổi tầm quan trọng (ngôi sao)
     Route::post('/todos/{id}/toggle-importance', [TodoController::class, 'toggleImportance'])
     ->name('todos.toggleImportance');
+
+    Route::post('/todos/{id}/quick-update', [TodoController::class, 'quickUpdate'])->name('todos.quickUpdate');
+
+    Route::get('/dashboard/tab/{tab}', [TodoController::class, 'tabPartial'])->name('dashboard.tab');
 
 });
 

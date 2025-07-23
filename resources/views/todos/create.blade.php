@@ -3,56 +3,104 @@
 
 @section('content')
 
-    <div class="max-w-lg mx-auto bg-white rounded-2xl shadow-lg p-8 mt-10">
-        <h2 class="text-3xl font-extrabold mb-6 text-center text-blue-700 tracking-tight">Thêm công việc mới</h2>
-        
-        {{-- Thông báo lỗi/flash_message --}}
+    <div class="max-w-2xl mx-auto bg-white/90 rounded-3xl shadow-2xl p-10 mt-10 border border-blue-100">
+        <h2 class="text-4xl font-extrabold mb-8 text-center text-blue-700 tracking-tight flex items-center justify-center gap-2">
+            <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Thêm công việc mới
+        </h2>
         @include('partials.flash_message')
-
-        <form action="{{ route('todos.add') }}" method="POST" class="space-y-5">
+        <form action="{{ route('todos.add') }}" method="POST" class="space-y-7">
             @csrf
-            @include('partials.todo_form')
-
-            <div class="mb-4">
-                <label class="block">Mục tiêu KPI</label>
-                <input type="number" name="kpi_target" class="border rounded px-3 py-2 w-full" min="1" value="{{ old('kpi_target', $todo->kpi_target ?? '') }}">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Tiêu đề công việc <span class="text-red-500">*</span></label>
+                    <input type="text" name="title" required class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50 placeholder-gray-400" placeholder="Nhập tiêu đề..." value="{{ old('title', $todo->title ?? '') }}">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Giao cho</label>
+                    <select name="assigned_to" class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50">
+                        <option value="">-- Chọn thành viên --</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}" {{ old('assigned_to', $todo->assigned_to ?? '') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Mức độ ưu tiên</label>
+                    <select name="priority" class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 bg-blue-50">
+                        @foreach(['Low' => 'Thấp', 'Normal' => 'Bình thường', 'High' => 'Cao', 'Urgent' => 'Khẩn cấp'] as $val => $label)
+                            <option value="{{ $val }}" {{ old('priority', $todo->priority ?? 'Normal') == $val ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Trạng thái</label>
+                    <input type="text" name="status" value="Chưa làm" readonly class="w-full px-4 py-2 border border-blue-200 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed">
+                </div>
             </div>
-
-            {{-- Bắt đầu phần nhập link tài liệu --}}
-            <div class="mb-4">
-                <label for="attachment_link" class="block">
-                    <span class="font-semibold flex items-center">
-                        <svg class="w-4 h-4 inline-block mr-1 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 0 1 0 5.656l-2.828 2.828a4 4 0 1 1-5.656-5.656l1.414-1.414"></path><path d="M10.172 13.828a4 4 0 0 1 0-5.656l2.828-2.828a4 4 0 1 1 5.656 5.656l-1.414 1.414"></path></svg>
-                        Link tài liệu công việc (Google Docs, Figma, Drive...)
-                    </span>
-                </label>
-                <input
-                    type="url"
-                    name="attachment_link"
-                    id="attachment_link"
-                    class="border rounded px-3 py-2 w-full"
-                    value="{{ old('attachment_link', $todo->attachment_link ?? '') }}"
-                    placeholder="Dán link Google Docs, Figma, Drive, v.v."
-                    maxlength="500"
-                >
-                <small class="text-gray-500">
-                    Có thể là link Google Docs, Figma, Drive, tài liệu tiến độ công việc, v.v. (Tùy chọn)
-                </small>
-                @error('attachment_link')
-                    <div class="text-red-500 text-sm">{{ $message }}</div>
-                @enderror
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700">Chi tiết</label>
+                <textarea name="detail" rows="3" class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50 placeholder-gray-400" placeholder="Mô tả chi tiết công việc...">{{ old('detail', $todo->detail ?? '') }}</textarea>
             </div>
-            {{-- Kết thúc phần nhập link tài liệu --}}
-
-            <div class="pt-4">
-                <button type="submit"
-                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 rounded-xl shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-300"
-                >
-                    Lưu
-                </button>
-                <a href="{{ route('dashboard') }}"
-                   class="block text-center mt-3 text-gray-500 hover:text-blue-600 hover:underline transition"
-                >Quay lại danh sách</a>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Hạn công việc</label>
+                    <div x-data="duePicker()" x-init="init()" class="relative">
+                        <div class="flex gap-2 flex-wrap">
+                            <button type="button" @click="select('today')" :class="selected==='today' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700'" class="px-3 py-1 rounded-lg border border-blue-200 font-semibold transition">Hôm nay</button>
+                            <button type="button" @click="select('tomorrow')" :class="selected==='tomorrow' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700'" class="px-3 py-1 rounded-lg border border-blue-200 font-semibold transition">Ngày mai</button>
+                            <button type="button" @click="select('nextweek')" :class="selected==='nextweek' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700'" class="px-3 py-1 rounded-lg border border-blue-200 font-semibold transition">Tuần tới</button>
+                            <button type="button" @click="select('custom')" :class="selected==='custom' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700'" class="px-3 py-1 rounded-lg border border-blue-200 font-semibold transition">Tuỳ chọn</button>
+                        </div>
+                        <template x-if="selected==='custom'">
+                            <div class="mt-3">
+                                <input type="datetime-local" x-model="custom" @input="updateCustom()" class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50 mt-1" placeholder="Chọn ngày giờ...">
+                                <template x-if="deadlineError">
+                                    <div class="text-red-500 text-xs mt-1" x-text="deadlineError"></div>
+                                </template>
+                            </div>
+                        </template>
+                        <input type="hidden" name="deadline" :value="deadlineStr">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Mục tiêu KPI</label>
+                    <input type="number" name="kpi_target" min="1" class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-blue-50" value="{{ old('kpi_target', $todo->kpi_target ?? '') }}" placeholder="Số lượng...">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Lặp lại</label>
+                    <div x-data="{ repeat: '{{ old('repeat', $todo->repeat ?? '') ?: 'none' }}' }">
+                        <select name="repeat" x-model="repeat" class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-blue-50">
+                            <option value="none">Không lặp</option>
+                            <option value="daily" {{ old('repeat', $todo->repeat ?? '') == 'daily' ? 'selected' : '' }}>Hàng ngày</option>
+                            <option value="weekdays" {{ old('repeat', $todo->repeat ?? '') == 'weekdays' ? 'selected' : '' }}>Thứ 2 - Thứ 6</option>
+                            <option value="weekly" {{ old('repeat', $todo->repeat ?? '') == 'weekly' ? 'selected' : '' }}>Hàng tuần</option>
+                            <option value="monthly" {{ old('repeat', $todo->repeat ?? '') == 'monthly' ? 'selected' : '' }}>Hàng tháng</option>
+                            <option value="yearly" {{ old('repeat', $todo->repeat ?? '') == 'yearly' ? 'selected' : '' }}>Hàng năm</option>
+                            <option value="custom" {{ old('repeat', $todo->repeat ?? '') == 'custom' ? 'selected' : '' }}>Tuỳ chỉnh</option>
+                        </select>
+                        <template x-if="repeat === 'custom'">
+                            <input type="text" name="repeat_custom" class="mt-2 w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-blue-50" placeholder="Ví dụ: 2 tuần/lần" value="{{ old('repeat_custom', $todo->repeat_custom ?? '') }}">
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">File đính kèm</label>
+                    <input type="url" name="attachment_link" class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50" value="{{ old('attachment_link', $todo->attachment_link ?? '') }}" placeholder="Dán link Google Docs, Figma, Drive, ...">
+                    <small class="text-gray-500">Có thể là link Google Docs, Figma, Drive, tài liệu tiến độ công việc, v.v. (Tùy chọn)</small>
+                    @error('attachment_link')
+                        <div class="text-red-500 text-sm">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="flex flex-col justify-end">
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition focus:outline-none focus:ring-2 focus:ring-blue-300 text-lg flex items-center justify-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        Lưu công việc
+                    </button>
+                    <a href="{{ route('dashboard') }}" class="block text-center mt-3 text-gray-500 hover:text-blue-600 hover:underline transition">Quay lại danh sách</a>
+                </div>
             </div>
         </form>
     </div>
