@@ -15,29 +15,43 @@ class TodoController extends Controller
     public function index(Request $request)
     {
         $tab = $request->get('tab', 'myday');
-        $userId = Auth::id();
-        
+        $user = Auth::user();
+        $userId = $user->id;
 
-        $todosQuery = Todo::with('assignee')
-            ->where(function ($q) use ($userId) {
-                $q->where('user_id', $userId)
-                  ->orWhere('assigned_to', $userId);
-            });
+        // Nếu là leader thì không filter theo user_id/assigned_to
+        if ($user->role === 'leader') {
+            $todosQuery = Todo::with(['assignee', 'progresses']);
+        } else {
+            $todosQuery = Todo::with(['assignee', 'progresses'])
+                ->where(function ($q) use ($userId) {
+                    $q->where('user_id', $userId)
+                      ->orWhere('assigned_to', $userId);
+                });
+        }
 
-            
         // Đếm số lượng cho badge ở các tab
         $countTabs = [
-            'myday'     => Todo::where(function($q) use($userId){ $q->where('user_id', $userId)->orWhere('assigned_to', $userId); })
-                                ->whereDate('deadline', now())->count(),
-            'important' => Todo::where(function($q) use($userId){ $q->where('user_id', $userId)->orWhere('assigned_to', $userId); })
-                                ->where('important', true)->count(),
-            'planned'   => Todo::where(function($q) use($userId){ $q->where('user_id', $userId)->orWhere('assigned_to', $userId); })
-                                ->whereNotNull('deadline')->count(),
-            'assigned'  => Todo::where('assigned_to', $userId)->count(),
-            'tasks'     => Todo::where(function($q) use($userId){ $q->where('user_id', $userId)->orWhere('assigned_to', $userId); })->count(),
-            'flagged' => Todo::where(function($q) use($userId){
-                $q->where('user_id', $userId)->orWhere('assigned_to', $userId);
-            })->where('flagged', true)->count(),
+            'myday'     => $user->role === 'leader'
+                ? Todo::whereDate('deadline', now())->count()
+                : Todo::where(function($q) use($userId){ $q->where('user_id', $userId)->orWhere('assigned_to', $userId); })
+                    ->whereDate('deadline', now())->count(),
+            'important' => $user->role === 'leader'
+                ? Todo::where('important', true)->count()
+                : Todo::where(function($q) use($userId){ $q->where('user_id', $userId)->orWhere('assigned_to', $userId); })
+                    ->where('important', true)->count(),
+            'planned'   => $user->role === 'leader'
+                ? Todo::whereNotNull('deadline')->count()
+                : Todo::where(function($q) use($userId){ $q->where('user_id', $userId)->orWhere('assigned_to', $userId); })
+                    ->whereNotNull('deadline')->count(),
+            'assigned'  => $user->role === 'leader'
+                ? Todo::whereNotNull('assigned_to')->count()
+                : Todo::where('assigned_to', $userId)->count(),
+            'tasks'     => $user->role === 'leader'
+                ? Todo::count()
+                : Todo::where(function($q) use($userId){ $q->where('user_id', $userId)->orWhere('assigned_to', $userId); })->count(),
+            'flagged' => $user->role === 'leader'
+                ? Todo::where('flagged', true)->count()
+                : Todo::where(function($q) use($userId){ $q->where('user_id', $userId)->orWhere('assigned_to', $userId); })->where('flagged', true)->count(),
         ];
 
         $users = User::all();
@@ -71,7 +85,7 @@ class TodoController extends Controller
             $todosQuery->whereNotNull('kpi_target');
         }
 
-        $todos = $todosQuery->orderBy('deadline')->paginate(10);
+        $todos = $todosQuery->with('progresses')->orderBy('deadline')->paginate(10);
         
         if ($tab === 'myday') {
             foreach ($todos as $todo) {
@@ -82,21 +96,29 @@ class TodoController extends Controller
 
         // Nếu là tab kpi, tính daySuggestions cho từng todo KPI
         if ($tab === 'kpi') {
+            // Đề xuất chia nhỏ KPI (tab 'kpi' hoặc 'planned')
             foreach ($todos as $todo) {
                 if ($todo->kpi_target && $todo->deadline) {
                     $totalProgress = $todo->progresses->sum('quantity');
                     $remaining = max(0, $todo->kpi_target - $totalProgress);
                     $from = now()->startOfDay();
-                    $to = \Carbon\Carbon::parse($todo->deadline);
-                    $period = collect(\Carbon\CarbonPeriod::create($from, $to))
-                        ->filter(fn($d) => $d->dayOfWeek !== \Carbon\Carbon::SUNDAY)
-                        ->slice(0, 7)
+                    $to = \Carbon\Carbon::parse($todo->deadline)->startOfDay();
+            
+                    // CHỈ LOẠI CHỦ NHẬT, KHÔNG BAO GIỜ LẤY CHỦ NHẬT
+                    $workDates = collect(\Carbon\CarbonPeriod::create($from, $to))
+                        ->filter(function($date) {
+                            return $date->dayOfWeek !== \Carbon\Carbon::SUNDAY;
+                        })
                         ->values();
-
+            
+                    if ($workDates->isEmpty()) {
+                        $workDates = collect(); // Không có ngày nào hợp lệ
+                    }
+            
+                    $count = $workDates->count();
                     $daySuggestions = [];
                     $remain = $remaining;
-                    $count = $period->count();
-                    foreach ($period as $idx => $date) {
+                    foreach ($workDates as $idx => $date) {
                         $remainDays = $count - $idx;
                         $suggest = ($remainDays > 0)
                             ? ceil($remain / $remainDays)
@@ -110,7 +132,10 @@ class TodoController extends Controller
                     $todo->daySuggestions = [];
                 }
             }
+            
+
         }
+        
 
         return view('dashboard', compact('todos', 'tab', 'countTabs', 'users'));    }
 
@@ -190,6 +215,11 @@ class TodoController extends Controller
     // Xử lý update todo
     public function update(Request $request, $id)
     {
+        $user = Auth::user();
+        // Nếu không phải leader thì không cho sửa assigned_to
+        if ($user->role !== 'leader') {
+            $request->request->remove('assigned_to');
+        }
         if ($request->input('deadline') === 'none' || empty($request->input('deadline'))) {
             $request->merge(['deadline' => null]);
         }
@@ -232,54 +262,60 @@ class TodoController extends Controller
 
         return redirect()->route('dashboard');
     }
+
     public function quickUpdate(Request $request, $id)
-{
-    $todo = Todo::where('id', $id)
-        ->where(function($q){
-            $q->where('user_id', Auth::id())->orWhere('assigned_to', Auth::id());
-        })->firstOrFail();
-
-    // Chuyển đổi deadline nếu có
-    if ($request->filled('deadline')) {
-        $deadline = $request->input('deadline');
-        $deadline = str_replace('T', ' ', $deadline);
-        if (strlen($deadline) == 16) { // Nếu thiếu giây
-            $deadline .= ':00';
+    {
+        $user = Auth::user();
+        // Nếu không phải leader thì không cho sửa assigned_to
+        if ($user->role !== 'leader') {
+            $request->request->remove('assigned_to');
         }
-        $request->merge(['deadline' => $deadline]);
-    }
+        $todo = Todo::where('id', $id)
+            ->where(function($q){
+                $q->where('user_id', Auth::id())->orWhere('assigned_to', Auth::id());
+            })->firstOrFail();
 
-    foreach (['assigned_to', 'kpi_target', 'attachment_link', 'deadline'] as $field) {
-        if ($request->input($field) === '') {
-            $request->merge([$field => null]);
+        // Chuyển đổi deadline nếu có
+        if ($request->filled('deadline')) {
+            $deadline = $request->input('deadline');
+            $deadline = str_replace('T', ' ', $deadline);
+            if (strlen($deadline) == 16) { // Nếu thiếu giây
+                $deadline .= ':00';
+            }
+            $request->merge(['deadline' => $deadline]);
         }
+
+        foreach (['assigned_to', 'kpi_target', 'attachment_link', 'deadline'] as $field) {
+            if ($request->input($field) === '') {
+                $request->merge([$field => null]);
+            }
+        }
+
+        $request->validate([
+            'title'           => 'required|string|max:255',
+            'priority'        => 'required|string',
+            'deadline'        => 'nullable|date',
+            'status'          => 'required|string',
+            'detail'          => 'nullable|string',
+            'assigned_to'     => 'nullable|exists:users,id',
+            'kpi_target'      => 'nullable|integer|min:1',
+            'attachment_link' => 'nullable|string|max:500', // Cho phép để trống hoặc không phải url
+        ]);
+
+        $todo->fill([
+            'title'           => $request->input('title'),
+            'deadline'        => $request->input('deadline'),
+            'priority'        => $request->input('priority') ?? 'Normal',
+            'status'          => $request->input('status'),
+            'detail'          => $request->input('detail'),
+            'assigned_to'     => $request->input('assigned_to'),
+            'kpi_target'      => $request->input('kpi_target'),
+            'attachment_link' => $request->input('attachment_link'),
+        ]);
+        $todo->save();
+
+        return response()->json(['success' => true]);
     }
-
-    $request->validate([
-        'title'           => 'required|string|max:255',
-        'priority'        => 'required|string',
-        'deadline'        => 'nullable|date',
-        'status'          => 'required|string',
-        'detail'          => 'nullable|string',
-        'assigned_to'     => 'nullable|exists:users,id',
-        'kpi_target'      => 'nullable|integer|min:1',
-        'attachment_link' => 'nullable|string|max:500', // Cho phép để trống hoặc không phải url
-    ]);
-
-    $todo->fill([
-        'title'           => $request->input('title'),
-        'deadline'        => $request->input('deadline'),
-        'priority'        => $request->input('priority') ?? 'Normal',
-        'status'          => $request->input('status'),
-        'detail'          => $request->input('detail'),
-        'assigned_to'     => $request->input('assigned_to'),
-        'kpi_target'      => $request->input('kpi_target'),
-        'attachment_link' => $request->input('attachment_link'),
-    ]);
-    $todo->save();
-
-    return response()->json(['success' => true]);
-}
 
     // Đổi trạng thái (AJAX)
     public function updateStatus(Request $request, Todo $todo)
@@ -396,11 +432,19 @@ class TodoController extends Controller
     public function tabPartial($tab, Request $request)
     {
         $userId = Auth::id();
-        $todosQuery = Todo::with('assignee')
-            ->where(function ($q) use ($userId) {
-                $q->where('user_id', $userId)
-                  ->orWhere('assigned_to', $userId);
-            });
+        $user = Auth::user();
+        $todosQuery = Todo::with('assignee');
+
+        // Nếu là leader thì không filter theo user_id/assigned_to
+        if ($user->role === 'leader') {
+            $todosQuery = Todo::with('assignee');
+        } else {
+            $todosQuery = Todo::with('assignee')
+                ->where(function ($q) use ($userId) {
+                    $q->where('user_id', $userId)
+                      ->orWhere('assigned_to', $userId);
+                });
+        }
 
         // Filter theo từng tab
         switch ($tab) {
@@ -432,8 +476,72 @@ class TodoController extends Controller
                 // không filter thêm, lấy tất cả tasks liên quan user
                 break;
         }
-        $todos = $todosQuery->orderBy('deadline')->paginate(10);
+        $todos = $todosQuery->with('progresses')->orderBy('deadline')->paginate(10);
         $users = User::all();
+
+        if ($tab === 'kpi') {
+            foreach ($todos as $todo) {
+                if ($todo->kpi_target && $todo->deadline) {
+                    $totalProgress = $todo->progresses->sum('quantity');
+                    $remaining = max(0, $todo->kpi_target - $totalProgress);
+                    $from = now()->startOfDay();
+                    $to = \Carbon\Carbon::parse($todo->deadline)->startOfDay();
+
+                    $workDates = collect(\Carbon\CarbonPeriod::create($from, $to))
+                        ->filter(function($date) use ($to) {
+                            return $date->dayOfWeek !== \Carbon\Carbon::SUNDAY || $date->eq($to);
+                        })
+                        ->values();
+                    if ($workDates->isEmpty()) {
+                        $workDates = collect([$to]);
+                    }
+
+                    $datesArr = $workDates->map(fn($d)=>$d->format('d/m'))->values()->all();
+                    $progressByDate = $todo->progresses
+                                   ->groupBy(fn($p)=>\Carbon\Carbon::parse($p->progress_date)->format('d/m'));
+                    $daySuggestions = [];
+
+                    $remaining = max(0, $todo->kpi_target - $totalProgress);
+
+                    /* 1. KPI đã hoàn thành → đánh dấu ✔ và bỏ qua chia nhỏ */
+                    if ($remaining === 0) {
+                        foreach ($datesArr as $d) {
+                            $daySuggestions[$d] = '✔';
+                        }
+                        $todo->daySuggestions = $daySuggestions;
+                        continue;     // tới todo kế tiếp, không chia nữa
+                    }
+
+                    /* 2. KPI chưa hoàn thành → chạy logic chia đều */
+                    for ($i = 0; $i < count($datesArr); $i++) {
+                        $d        = $datesArr[$i];
+                        $done     = $progressByDate->get($d, collect())->sum('quantity');
+                        $daysLeft = count($datesArr) - $i;
+                        $suggest  = $daysLeft > 1 ? (int)ceil($remaining / $daysLeft) : $remaining;
+
+                        if ($done > 0 && $done < $suggest) {
+                            $daySuggestions[$d] = "$done/$suggest";
+                            $remaining        -= $suggest;
+                        } elseif ($done >= $suggest && $suggest > 0) {
+                            $daySuggestions[$d] = '✔';
+                            $remaining        -= $done;
+                        } else {
+                            $daySuggestions[$d] = $suggest;
+                            $remaining        -= $suggest;
+                        }
+                        if ($remaining < 0) $remaining = 0;
+                    }
+                    $todo->daySuggestions = $daySuggestions;
+                } else {
+                    $todo->daySuggestions = [];
+                }
+                // Tự động đánh dấu hoàn thành nếu đã đủ KPI
+                if ($todo->kpi_target && $todo->progresses->sum('quantity') >= $todo->kpi_target && !$todo->completed) {
+                    $todo->completed = true;
+                    $todo->save();
+                }
+            }
+        }
 
         return view('partials.todo_table', compact('todos', 'tab', 'users'))->render();
     }
@@ -458,29 +566,33 @@ class TodoController extends Controller
             })
             ->values();
 
-        foreach ($todos as $todo) {
-            $from = $today;
-            $to = $todo->deadline ? \Carbon\Carbon::parse($todo->deadline) : $today;
-            $workDates = collect(\Carbon\CarbonPeriod::create($from, $to))
-                ->filter(function($date) {
-                    return $date->dayOfWeek !== \Carbon\Carbon::SUNDAY;
-                })
-                ->values();
-            $totalProgress = $todo->progresses->sum('quantity');
-            $remaining = max(0, ($todo->kpi_target ?? 0) - $totalProgress);
-            $daySuggestions = [];
-            $count = $workDates->count();
-            foreach ($workDates as $idx => $date) {
-                $remainDays = $count - $idx;
-                $suggest = ($remainDays > 0)
-                    ? ceil($remaining / $remainDays)
-                    : $remaining;
-                $daySuggestions[$date->format('d/m')] = $suggest;
-                $remaining -= $suggest;
-                if ($remaining < 0) $remaining = 0;
+            foreach ($todos as $todo) {
+                $from = $today;
+                $to = $todo->deadline ? \Carbon\Carbon::parse($todo->deadline) : $today;
+                $workDates = collect(\Carbon\CarbonPeriod::create($from, $to))
+                    ->filter(function($date) {
+                        return $date->dayOfWeek !== \Carbon\Carbon::SUNDAY;
+                    })
+                    ->values();
+                if ($workDates->isEmpty()) {
+                    $workDates = collect([$to]);
+                }
+                $totalProgress = $todo->progresses->sum('quantity');
+                $remaining = max(0, ($todo->kpi_target ?? 0) - $totalProgress);
+                $daySuggestions = [];
+                $count = $workDates->count();
+                foreach ($workDates as $idx => $date) {
+                    $remainDays = $count - $idx;
+                    $suggest = ($remainDays > 0)
+                        ? ceil($remaining / $remainDays)
+                        : $remaining;
+                    $daySuggestions[$date->format('d/m')] = $suggest;
+                    $remaining -= $suggest;
+                    if ($remaining < 0) $remaining = 0;
+                }
+                $todo->daySuggestions = $daySuggestions;
             }
-            $todo->daySuggestions = $daySuggestions;
-        }
+            
 
         return view('dashboard', compact('todos'))->with('tab', 'planned');
     }

@@ -2,3 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
+.toggle:checked:before {
+    content: none !important;
+}

@@ -15,13 +15,13 @@
     ];
     $statusArr = array_keys($statusList);
     $tabs = [
-            'myday'    => ['label' => 'Việc hôm nay',      'icon' => 'sun'],
-            'important'=> ['label' => 'Quan trọng',        'icon' => 'star'],
-            'planned'  => ['label' => 'Đã lên kế hoạch',   'icon' => 'calendar'],
-            'assigned' => ['label' => 'Được giao cho tôi', 'icon' => 'user'],
+        'myday'    => ['label' => 'Việc hôm nay',      'icon' => 'sun'],
+        'important'=> ['label' => 'Quan trọng',        'icon' => 'star'],
+        'planned'  => ['label' => 'Đã lên kế hoạch',   'icon' => 'calendar'],
+        'assigned' => ['label' => 'Được giao cho tôi', 'icon' => 'user'],
             'tasks'    => ['label' => 'Tất cả công việc',  'icon' => 'home'],
             'completed'=> ['label' => 'Đã hoàn thành',      'icon' => 'check'],
-            'kpi'      => ['label' => 'KPI/Tiến độ',       'icon' => 'flag'],
+        'kpi'      => ['label' => 'KPI/Tiến độ',       'icon' => 'flag'],
             'report'   => ['label' => 'Thống kê/Báo cáo',  'icon' => 'chart'],
     ];
 @endphp
@@ -114,6 +114,89 @@
                 'statusArr' => $statusArr
             ])
         </div>
+        <!-- Modal đặt ở đây -->
+        <div x-show="showModal && selectedTodo" x-cloak class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" @keydown.escape.window="closeModal()" @click.self="closeModal()">
+            <div class="bg-base-100 max-w-lg w-full rounded-2xl p-8 shadow-2xl relative border border-base-200 animate-fadeIn" @click.stop>
+                <button @click="closeModal()" class="absolute top-4 right-5 text-2xl text-gray-400 hover:text-error focus:outline-none" title="Đóng">&times;</button>
+                <h3 class="text-2xl font-bold mb-6 text-primary flex items-center gap-2">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    Sửa công việc
+                </h3>
+                <form @submit="submitEditForm($event)" class="space-y-4">
+                    <div>
+                        <label for="title" class="block text-sm font-semibold mb-1">Tiêu đề</label>
+                        <input type="text" id="title" x-model="editForm.title" class="input input-bordered w-full" required>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label for="deadline" class="block text-sm font-semibold mb-1">Hạn chót</label>
+                            <input type="datetime-local" id="deadline" x-model="editForm.deadline" class="input input-bordered w-full">
+                        </div>
+                        <div class="flex-1">
+                            <label for="priority" class="block text-sm font-semibold mb-1">Độ ưu tiên</label>
+                            <select id="priority" x-model="editForm.priority" class="select select-bordered w-full">
+                            <option value="Low">Thấp</option>
+                                <option value="Medium">Trung bình</option>
+                            <option value="High">Cao</option>
+                            <option value="Urgent">Khẩn cấp</option>
+                        </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label for="status" class="block text-sm font-semibold mb-1">Trạng thái</label>
+                            <select id="status" x-model="editForm.status" class="select select-bordered w-full">
+                                @foreach($statusList as $label => $class)
+                                    <option value="{{ $label }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label for="assigned_to" class="block text-sm font-semibold mb-1">Được giao cho</label>
+                            <select id="assigned_to" x-model="editForm.assigned_to" class="select select-bordered w-full">
+                                <option value="">Chọn người</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    </div>
+                    <div>
+                        <label for="kpi_target" class="block text-sm font-semibold mb-1">Mục tiêu KPI</label>
+                        <input type="number" id="kpi_target" x-model="editForm.kpi_target" class="input input-bordered w-full">
+                    </div>
+                    <div>
+                        <label for="attachment_link" class="block text-sm font-semibold mb-1">Liên kết tệp đính kèm</label>
+                        <input type="url" id="attachment_link" x-model="editForm.attachment_link" class="input input-bordered w-full">
+                    </div>
+                    <div>
+                        <label for="detail" class="block text-sm font-semibold mb-1">Chi tiết</label>
+                        <textarea id="detail" x-model="editForm.detail" class="textarea textarea-bordered w-full" rows="3"></textarea>
+                    </div>
+                    <div class="flex justify-between items-center mt-6">
+                        <button type="button" @click="openDeleteConfirm(selectedTodo.id)" class="btn btn-error btn-outline">Xóa</button>
+                        <div class="flex gap-2">
+                            <button type="button" @click="closeModal()" class="btn btn-ghost">Hủy</button>
+                            <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Modal xác nhận xóa -->
+        <div x-show="showDeleteConfirm" x-cloak class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" @keydown.escape.window="closeDeleteConfirm()" @click.self="closeDeleteConfirm()">
+            <div class="bg-base-100 max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-base-200 animate-fadeIn" @click.stop>
+                <h3 class="text-xl font-bold mb-4 text-error flex items-center gap-2">
+                    <svg class="w-6 h-6 text-error" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    Xác nhận xóa công việc
+                </h3>
+                <p>Bạn có chắc chắn muốn xóa công việc này? Hành động này không thể hoàn tác.</p>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" @click="closeDeleteConfirm()" class="btn btn-ghost">Hủy</button>
+                    <button type="button" class="btn btn-error" @click="confirmDelete()">Xóa</button>
+                </div>
+            </div>
+        </div>
         {{-- Modal, JS, ... giữ nguyên --}}
     </div>
 </div>
@@ -165,12 +248,12 @@ function dashboardData() {
             return Math.round((todo.total_progress ?? 0) / todo.kpi_target * 100);
         },
         async submitEditForm(e) {
-    e.preventDefault();
+            e.preventDefault();
     if (!this.selectedTodo || !this.selectedTodo.id) {
         alert('Không xác định được công việc cần sửa!');
         return;
     }
-    let url = `/todos/${this.selectedTodo.id}/quick-update`;
+            let url = `/todos/${this.selectedTodo.id}/quick-update`;
     let form = new FormData();
     form.append('title', this.editForm.title);
     form.append('deadline', this.editForm.deadline || '');
@@ -182,16 +265,16 @@ function dashboardData() {
     form.append('attachment_link', this.editForm.attachment_link || '');
     form.append('_token', document.querySelector('meta[name=csrf-token]').content);
 
-    let resp = await fetch(url, {
-        method: 'POST',
-        body: form,
-    });
-    if (resp.ok) {
-        location.reload();
-    } else {
-        alert('Có lỗi khi lưu!');
-    }
-},
+            let resp = await fetch(url, {
+                method: 'POST',
+                body: form,
+            });
+            if (resp.ok) {
+                location.reload();
+            } else {
+                alert('Có lỗi khi lưu!');
+            }
+        },
 
         async toggleComplete(id) {
             let url = `/todos/${id}/toggle`;
@@ -199,15 +282,27 @@ function dashboardData() {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
             });
-            if (resp.ok) location.reload();
-            else alert('Không thể cập nhật!');
+            if (resp.ok) {
+                this.loadTab(this.activeTab);
+            } else {
+                alert('Không thể cập nhật!');
+            }
         },
 openDeleteConfirm(id) {
     this.deleteTargetId = id;
-    this.showModal = false;          // <-- Đóng modal chi tiết
-    this.showDeleteConfirm = true;   // <-- Hiện modal xác nhận xoá
+            this.showModal = false;          // Đóng modal chi tiết
+            this.showDeleteConfirm = true;   // Hiện modal xác nhận xoá
 },
-
+        closeDeleteConfirm() {
+            this.showDeleteConfirm = false;
+            this.deleteTargetId = null;
+        },
+        confirmDelete() {
+            if (this.deleteTargetId) {
+                this.deleteTodo(this.deleteTargetId);
+            }
+            this.closeDeleteConfirm();
+        },
         async deleteTodo(id) {
             this.showDeleteConfirm = false;
             this.showModal = false;
@@ -216,7 +311,7 @@ openDeleteConfirm(id) {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
             });
-            if (resp.ok) location.reload();
+            if (resp.ok) this.loadTab(this.activeTab);
             else alert('Không thể xoá!');
         }
     }

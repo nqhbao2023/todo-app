@@ -14,20 +14,20 @@
                     <th class="p-3 font-bold text-center">Nhập tiến độ</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-base-200">
+            <tbody>
                 @foreach($todos as $t)
-                <tr>
-                    <td class="p-3">{{ $t->title }}</td>
-                    <td class="p-3 text-center">{{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y') : '—' }}</td>
-                    @if(isset($t->daySuggestions) && is_iterable($t->daySuggestions))
-                        @foreach($t->daySuggestions as $suggest)
-                            <td class="p-3 text-center font-bold text-blue-700">{{ $suggest }}</td>
-                        @endforeach
-                    @endif
-                    <td class="p-3 text-center">
-                        <a href="{{ route('todos.progress.form', $t->id) }}" class="text-blue-600 hover:underline">Nhập tiến độ</a>
-                    </td>
-                </tr>
+                    <tr>
+                        <td class="p-3">{{ $t->title }}</td>
+                        <td class="p-3 text-center">{{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y') : '—' }}</td>
+                        @if(isset($t->daySuggestions) && is_iterable($t->daySuggestions))
+                            @foreach($t->daySuggestions as $suggest)
+                                <td class="p-3 text-center font-bold text-blue-700">{{ $suggest }}</td>
+                            @endforeach
+                        @endif
+                        <td class="p-3 text-center">
+                            <a href="{{ route('todos.progress.form', $t->id) }}" class="text-blue-600 hover:underline">Nhập tiến độ</a>
+                        </td>
+                    </tr>
                 @endforeach
             </tbody>
         </table>
@@ -50,56 +50,89 @@
             </thead>
             <tbody class="divide-y divide-base-200">
                 @forelse($todos as $i => $t)
-                    @if($t->kpi_target)
-                        <tr x-data="{ open: false }">
-                            <td class="p-3 text-center">{{ $i + 1 }}</td>
-                            <td class="p-3 font-medium">{{ $t->title }}</td>
-                            <td class="p-3 text-center">{{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y H:i') : '—' }}</td>
-                            <td class="p-3 text-center">{{ $t->kpi_target }}</td>
-                            <td class="p-3 text-center">{{ $t->total_progress ?? 0 }}</td>
-                            <td class="p-3 text-center">{{ $t->percent_progress ?? 0 }}%</td>
-                            <td class="p-3 text-center">
-                                @if($t->is_completed_kpi)
-                                    <span class="text-success font-semibold">Đã đạt</span>
-                                @else
-                                    <span class="text-warning font-semibold">Chưa đạt</span>
-                                @endif
-                            </td>
-                            <td class="p-3 text-center">
-                                <a href="{{ route('todos.progress.form', $t->id) }}" class="text-blue-600 hover:underline font-semibold">Nhập tiến độ</a>
-                            </td>
-                            <td class="p-3 text-center">
-                                <button @click="open = !open" type="button" class="text-blue-600 underline">
-                                    Đề xuất
-                                    <span x-show="!open">▼</span>
-                                    <span x-show="open">▲</span>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr x-show="open" x-cloak>
-                            <td colspan="9" class="bg-base-200 px-6 pb-4 transition-all duration-200">
-                                @if(isset($t->daySuggestions) && count($t->daySuggestions))
-                                    <div class="max-w-lg">
-                                        <span class="font-semibold text-base-content/50">Gợi ý chia nhỏ từng ngày:</span>
-                                        <table class="w-auto mt-2 border border-base-200 rounded">
-                                            <tr>
-                                                @foreach(array_keys($t->daySuggestions) as $date)
-                                                    <th class="px-2 py-1 text-xs text-base-content/50">{{ $date }}</th>
-                                                @endforeach
-                                            </tr>
-                                            <tr>
-                                                @foreach($t->daySuggestions as $suggest)
-                                                    <td class="px-2 py-1 text-center font-bold text-blue-700">{{ $suggest }}</td>
-                                                @endforeach
-                                            </tr>
-                                        </table>
-                                    </div>
-                                @else
-                                    <span class="text-base-content/50">Không có đề xuất chia nhỏ</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @endif
+                    <tr>
+                        <td class="p-3 text-center">{{ $i + 1 }}</td>
+                        <td class="p-3 font-medium">
+                            <button
+                                class="hover:underline text-left w-full transition {{ $t->completed ? 'line-through text-base-content/50' : 'text-blue-700' }}"
+                                @click="openModal({{ json_encode([
+                                    'id' => $t->id,
+                                    'title' => $t->title,
+                                    'assignee' => $t->assignee ? ['name' => $t->assignee->name] : null,
+                                    'status' => $t->status,
+                                    'priority' => $t->priority,
+                                    'deadline' => $t->deadline,
+                                    'kpi_target' => $t->kpi_target,
+                                    'total_progress' => $t->total_progress,
+                                    'percent_progress' => $t->percent_progress,
+                                    'detail' => $t->detail,
+                                    'attachment_link' => $t->attachment_link,
+                                    'completed' => $t->completed,
+                                    'important' => $t->important,
+                                ]) }})"
+                                type="button"
+                            >
+                                {{ $t->title }}
+                            </button>
+                        </td>
+                        <td class="p-3 text-center">{{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y H:i') : '—' }}</td>
+                        <td class="p-3 text-center">{{ $t->kpi_target }}</td>
+                        <td class="p-3 text-center">{{ $t->total_progress ?? 0 }}</td>
+                        <td class="p-3 text-center">{{ $t->percent_progress ?? 0 }}%</td>
+                        <td class="p-3 text-center">
+                            @if($t->is_completed_kpi)
+                                <span class="text-success font-semibold">Đã đạt</span>
+                            @else
+                                <span class="text-warning font-semibold">Chưa đạt</span>
+                            @endif
+                        </td>
+                        <td class="p-3 text-center">
+                            <a href="{{ route('todos.progress.form', $t->id) }}" class="text-blue-600 hover:underline font-semibold">Nhập tiến độ</a>
+                        </td>
+                        <td class="p-3 text-center">
+                            @php $today = now()->format('d/m'); @endphp
+                            <div>
+                                @foreach($t->daySuggestions as $date => $suggest)
+                                    @if($date === $today)
+                                        <div class="font-bold text-lg text-primary mb-1">
+                                            Hôm nay: 
+                                            @if(is_string($suggest) && strpos($suggest, '/') !== false)
+                                                @php
+                                                    $parts = explode('/', $suggest);
+                                                    $done = (int)($parts[0] ?? 0);
+                                                    $target = (int)($parts[1] ?? 0);
+                                                @endphp
+                                                {{ $done }}/{{ $target }}
+                                                @if($done < $target)
+                                                    <div class="mt-1 p-2 bg-warning/20 border-l-4 border-warning text-warning font-semibold rounded">
+                                                        ⚠️ Bạn còn thiếu {{ $target - $done }} để hoàn thành hôm nay!
+                                                    </div>
+                                                @else
+                                                    <span class="text-success font-semibold">Đã hoàn thành hôm nay!</span>
+                                                @endif
+                                            @else
+                                                {{ $suggest }}
+                                            @endif
+                                        </div>
+                                    @endif
+                                @endforeach
+                                <div class="mt-2 text-xs text-base-content/60">
+                                    @foreach($t->daySuggestions as $date => $suggest)
+                                        @if($date !== $today)
+                                            <span class="inline-block mx-1">
+                                                {{ $date }}: 
+                                                @if(is_string($suggest) && strpos($suggest, '/') !== false)
+                                                    {{ $suggest }}
+                                                @else
+                                                    {{ $suggest }}
+                                                @endif
+                                            </span>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                 @empty
                     <tr>
                         <td colspan="9" class="text-center text-base-content/50 py-8">Chưa có công việc nào đặt KPI!</td>
@@ -132,10 +165,12 @@
                     )
                     <tr class="hover:bg-blue-50 transition-all group">
                         <td class="p-3 text-center font-semibold text-base-content/50">
-                            <input type="checkbox" class="form-checkbox w-5 h-5 text-success border-base-300 rounded focus:ring-success cursor-pointer align-middle"
+                            <input
+                                type="checkbox"
                                 :checked="{{ $t->completed ? 'true' : 'false' }}"
                                 @change="toggleComplete({{ $t->id }})"
-                            >
+                                class="toggle border-indigo-600 bg-indigo-500 checked:border-orange-500 checked:bg-orange-400 checked:text-orange-800"
+                            />
                         </td>
                         <td class="p-3 font-medium">
                             <button

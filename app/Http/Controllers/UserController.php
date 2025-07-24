@@ -25,6 +25,7 @@ class UserController extends Controller
             'name'    => $request->input('name'),
             'email'   => $request->input('email'),
             'password'=> Hash::make($request->input('password')),
+            'role' => 'member',
         ]);
         return redirect('/login')->with('status', 'hell yeah! You are registered successfully');
     }
