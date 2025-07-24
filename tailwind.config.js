@@ -26,6 +26,6 @@ export default {
     ],
 
     daisyui: {
-        themes: ["light", "dark"], // chỉ bật 2 theme này
+        themes: ["dracula"], // thêm "dracula"
     },
 };

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi" data-theme="dracula">
 
 <head>
     <meta charset="UTF-8">
@@ -8,6 +8,8 @@
     <title>@yield('title', 'Todo App')</title>
     @viteReactRefresh
     @vite('resources/css/app.css')
+@vite('resources/js/app.js')
+
     <style>
     [x-cloak] { display: none !important; }
 </style>
@@ -39,15 +41,14 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Lấy theme đã lưu (nếu có)
     const saved = localStorage.getItem('theme');
     if (saved) document.documentElement.setAttribute('data-theme', saved);
 
-    // Bắt sự kiện click
     document.getElementById('toggle-dark').addEventListener('click', function() {
         const html = document.documentElement;
         const current = html.getAttribute('data-theme');
-        const next = current === 'dark' ? 'light' : 'dark';
+        // Chuyển giữa dracula và light
+        const next = current === 'dracula' ? 'light' : 'dracula';
         html.setAttribute('data-theme', next);
         localStorage.setItem('theme', next);
     });

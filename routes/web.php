@@ -23,6 +23,9 @@ Route::get('/', function () {
 
 // Authenticated routes
 Route::middleware(['auth'])->group(function () {
+
+
+    
     Route::post('/todos/{todo}/progress', [TodoController::class, 'saveProgress'])->name('todos.progress.save');
 
     // web.php

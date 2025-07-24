@@ -29,17 +29,18 @@
 {{-- Flash messages --}}
 @include('partials.flash_message')
 
-<div class="max-w-9xl mx-auto flex bg-white rounded-xl shadow-md min-h-[80vh]">
+<div class="max-w-9xl mx-auto flex bg-white rounded-xl shadow-md min-h-[80vh]" x-data="dashboardData()">
     <!-- Sidebar -->
     <aside class="w-60 border-r px-4 py-8 flex flex-col bg-base-200 rounded-l-xl h-[80vh]">
         <div class="mb-6 text-center">
             <span class="font-bold text-primary text-lg">Menu</span>
         </div>
         @foreach($tabs as $k => $tabInfo)
-            <a 
-                href="{{ route('dashboard', ['tab' => $k]) }}"
-                class="flex items-center gap-3 px-4 py-2 rounded font-medium transition
-                    {{ (isset($tab) && $tab == $k) || (!isset($tab) && $k=='myday') ? 'bg-blue-500 text-white' : 'text-base-content hover:bg-base-300' }}"
+            <button
+                type="button"
+                :class="activeTab === '{{ $k }}' ? 'bg-blue-500 text-white' : 'text-base-content hover:bg-base-300'"
+                @click="loadTab('{{ $k }}')"
+                class="flex items-center gap-3 px-4 py-2 rounded font-medium transition"
             >
                 {{-- Icon dùng SVG inline hoặc Unicode cho đơn giản --}}
                 @if($tabInfo['icon']=='sun')
@@ -80,7 +81,7 @@
                     </svg>
                 @endif
                 {{ $tabInfo['label'] }}
-            </a>
+            </button>
         @endforeach
         <!-- Nút Thêm công việc -->
         <a 
@@ -101,407 +102,19 @@
     <!-- Danh sách công việc -->
     <div class="flex-1 p-6" x-data="dashboardData()">
         <h2 class="text-2xl font-bold mb-6 text-center">Todo List</h2>
-        @if(isset($tab) && $tab == 'planned')
-            <div class="overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4">
-                <table class="min-w-full divide-y divide-base-200 text-[15px]">
-                    <thead class="bg-base-200">
-                        <tr>
-                            <th class="p-3 font-bold text-left text-base-content">Tên công việc</th>
-                            <th class="p-3 font-bold text-center">Deadline</th>
-                            @php $firstTodo = $todos->first(); @endphp
-                            @if($firstTodo && isset($firstTodo->daySuggestions) && is_iterable($firstTodo->daySuggestions))
-                                @foreach(array_keys($firstTodo->daySuggestions) as $date)
-                                    <th class="p-3 font-bold text-center">Gợi ý {{ $date }}</th>
-                                @endforeach
-                            @endif
-                            <th class="p-3 font-bold text-center">Nhập tiến độ</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-base-200">
-                        @foreach($todos as $t)
-                        <tr>
-                            <td class="p-3">{{ $t->title }}</td>
-                            <td class="p-3 text-center">{{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y') : '—' }}</td>
-                            @if(isset($t->daySuggestions) && is_iterable($t->daySuggestions))
-                                @foreach($t->daySuggestions as $suggest)
-                                    <td class="p-3 text-center font-bold text-blue-700">{{ $suggest }}</td>
-                                @endforeach
-                            @endif
-                            <td class="p-3 text-center">
-                                <a href="{{ route('todos.progress.form', $t->id) }}" class="text-blue-600 hover:underline">Nhập tiến độ</a>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
-        @if(!isset($tab) || $tab != 'planned')
-        <div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4" style="overflow:visible;">
-            <table class="min-w-full divide-y divide-base-200 text-[15px]">
-                @if(isset($tab) && $tab == 'kpi')
-                <thead class="bg-base-200">
-                    <tr>
-                        <th class="p-3 font-bold text-center w-12">#</th>
-                        <th class="p-3 font-bold text-left text-base-content">Tên công việc</th>
-                        <th class="p-3 font-bold text-center">Deadline</th>
-                        <th class="p-3 font-bold text-center">KPI mục tiêu</th>
-                        <th class="p-3 font-bold text-center">Đã hoàn thành</th>
-                        <th class="p-3 font-bold text-center">% hoàn thành</th>
-                        <th class="p-3 font-bold text-center">Trạng thái KPI</th>
-                        <th class="p-3 font-bold text-center">Nhập tiến độ</th>
-                        <th class="p-3 font-bold text-center">Đề xuất chia nhỏ</th>
-                    </tr>
-                </thead>    
-                <tbody class="divide-y divide-base-200">
-@forelse($todos as $i => $t)
-    @if($t->kpi_target)
-        <tr x-data="{ open: false }">
-            <td class="p-3 text-center">{{ $i + 1 }}</td>
-            <td class="p-3 font-medium">{{ $t->title }}</td>
-            <td class="p-3 text-center">{{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y H:i') : '—' }}</td>
-            <td class="p-3 text-center">{{ $t->kpi_target }}</td>
-            <td class="p-3 text-center">{{ $t->total_progress ?? 0 }}</td>
-            <td class="p-3 text-center">{{ $t->percent_progress ?? 0 }}%</td>
-            <td class="p-3 text-center">
-                @if($t->is_completed_kpi)
-                    <span class="text-success font-semibold">Đã đạt</span>
-                @else
-                    <span class="text-warning font-semibold">Chưa đạt</span>
-                @endif
-            </td>
-            <td class="p-3 text-center">
-                <a href="{{ route('todos.progress.form', $t->id) }}" class="text-blue-600 hover:underline font-semibold">Nhập tiến độ</a>
-            </td>
-            <td class="p-3 text-center">
-                <button @click="open = !open" type="button" class="text-blue-600 underline">
-                    Đề xuất
-                    <span x-show="!open">▼</span>
-                    <span x-show="open">▲</span>
-                </button>
-            </td>
-        </tr>
-        <tr x-show="open" x-cloak>
-            <td colspan="9" class="bg-base-200 px-6 pb-4 transition-all duration-200">
-                @if(isset($t->daySuggestions) && count($t->daySuggestions))
-                    <div class="max-w-lg">
-                        <span class="font-semibold text-base-content/50">Gợi ý chia nhỏ từng ngày:</span>
-                        <table class="w-auto mt-2 border border-base-200 rounded">
-                            <tr>
-                                @foreach(array_keys($t->daySuggestions) as $date)
-                                    <th class="px-2 py-1 text-xs text-base-content/50">{{ $date }}</th>
-                                @endforeach
-                            </tr>
-                            <tr>
-                                @foreach($t->daySuggestions as $suggest)
-                                    <td class="px-2 py-1 text-center font-bold text-blue-700">{{ $suggest }}</td>
-                                @endforeach
-                            </tr>
-                        </table>
-                    </div>
-                @else
-                    <span class="text-base-content/50">Không có đề xuất chia nhỏ</span>
-                @endif
-            </td>
-        </tr>
-    @endif
-@empty
-    <tr>
-        <td colspan="9" class="text-center text-base-content/50 py-8">Chưa có công việc nào đặt KPI!</td>
-    </tr>
-@endforelse
-                </tbody>
-                @else
-                <thead class="bg-base-200">
-                    <tr>
-                        <th class="p-3 font-bold text-center w-12">#</th>
-                        <th class="p-3 font-bold text-left text-base-content">Tên công việc</th>
-                        <th class="p-3 font-bold text-center">Deadline</th>
-                        <th class="p-3 font-bold text-center">Quan trọng</th>
-                        <th class="p-3 font-bold text-center">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-base-200">
-
-
-                
-                    @foreach ($todos as $i => $t)
-                    @php
-                        $isOverdue = !$t->completed && $t->deadline && \Carbon\Carbon::parse($t->deadline)->lt(now());
-                    @endphp
-                    @if(
-                        ($tab === 'tasks' ? !$t->completed :
-                            (($tab === 'completed' || $tab === 'report') ? $t->completed : !$t->completed)
-                        )
-                    )
-                    <tr class="hover:bg-blue-50 transition-all group">
-                        <td class="p-3 text-center font-semibold text-base-content/50">
-                            <input type="checkbox" class="form-checkbox w-5 h-5 text-success border-base-300 rounded focus:ring-success cursor-pointer align-middle"
-                                :checked="{{ $t->completed ? 'true' : 'false' }}"
-                                @change="toggleComplete({{ $t->id }})"
-                            >
-                        </td>
-                        <td class="p-3 font-medium">
-                            <button
-                                class="hover:underline text-left w-full transition {{ $t->completed ? 'line-through text-base-content/50' : 'text-blue-700' }}"
-                                @click="openModal({{ json_encode([
-                                    'id' => $t->id,
-                                    'title' => $t->title,
-                                    'assignee' => $t->assignee ? ['name' => $t->assignee->name] : null,
-                                    'status' => $t->status,
-                                    'priority' => $t->priority,
-                                    'deadline' => $t->deadline,
-                                    'kpi_target' => $t->kpi_target,
-                                    'total_progress' => $t->total_progress,
-                                    'percent_progress' => $t->percent_progress,
-                                    'detail' => $t->detail,
-                                    'attachment_link' => $t->attachment_link,
-                                    'completed' => $t->completed,
-                                    'important' => $t->important,
-                                ]) }})"
-                                type="button"
-                            >
-                                {{ $t->title }}
-                                @if($t->flagged)
-                                    <span title="Gắn cờ email" class="ml-1 text-blue-500">
-                                        <svg class="inline w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 15V4h15l-1.5 4L19 12H4z"/></svg>
-                                    </span>
-                                @endif
-                            </span>
-                            @if($isOverdue)
-                                <span class="ml-2 px-2 py-1 rounded bg-red-100 text-red-600 text-xs font-bold animate-pulse" title="Công việc này đã quá hạn!">
-                                    ĐÃ QUÁ HẠN ⏰
-                                </span>
-                            @endif
-                        </td>
-
-                        <td class="p-3 text-center {{ $isOverdue ? 'text-error font-bold' : '' }}">
-                            {{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y H:i') : '—' }}
-                        </td>
-                        <td class="p-3 text-center">
-                            <form action="{{ route('todos.toggleImportance', $t->id) }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="focus:outline-none group" title="Đánh dấu quan trọng">
-                                    @if($t->important)
-                                        <svg class="w-6 h-6 text-warning" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.174c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.286 3.967c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.104 0l-3.38 2.455c-.785.57-1.84-.197-1.54-1.118l1.286-3.967a1 1 0 00-.364-1.118L2.34 9.397c-.783-.57-.38-1.81.588-1.81h4.174a1 1 0 00.95-.69l1.286-3.967z" />
-                                        </svg>
-                                    @else
-                                        <svg class="w-6 h-6 text-base-content/50 group-hover:text-warning transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.174c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.286 3.967c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.17 0l-3.38 2.455c-.785.57-1.84-.197-1.54-1.118l1.286-3.967a1 1 0 00-.364-1.118L2.34 9.397c-.783-.57-.38-1.81.588-1.81h4.174a1 1 0 00.95-.69l1.286-3.967z" />
-                                        </svg>
-                                    @endif
-                                </button>
-                            </form>
-                        </td>
-                        <td class="p-3 text-center whitespace-nowrap" style="overflow:visible;">
-                            <div x-data="dropdownStatus('{{ $t->id }}', '{{ $t->status }}')" class="relative inline-block w-full">
-                                <button
-                                    x-on:click="toggle($event)"
-                                    type="button"
-                                    class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold shadow cursor-pointer
-                                        {{ $statusList[$t->status] ?? 'bg-gray-200 text-gray-700' }}
-                                        border border-base-200 hover:shadow-lg transition"
-                                >
-                                    <span x-text="currentStatus"></span>
-                                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" stroke-width="2"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                                    </svg>
-                                </button>
-                                <div
-                                    x-show="open"
-                                    class="absolute z-50 w-44 bg-white border rounded-xl shadow-lg py-1 mt-1"
-                                    style="left:0;top:100%;"
-                                    x-on:click.away="close()"
-                                    x-transition
-                                >
-                                    <template x-for="option in statusOptions" :key="option">
-                                        <button
-                                            type="button"
-                                            class="block w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition"
-                                            x-on:click="changeStatus(option)"
-                                            x-text="'Đánh dấu là ' + option"
-                                            :class="{'bg-base-300': option === currentStatus}"
-                                            :disabled="option === currentStatus"
-                                        ></button>
-                                    </template>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    @endif
-                    @endforeach
-                </tbody>
-                @endif
-            </table>
+        <div x-show="isLoading" class="flex justify-center items-center py-8">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
         </div>
-        @endif
-
-        @if(!isset($tab) || $tab != 'planned')
-        <div class="mt-8">
-            {{ $todos->withQueryString()->links() }}
+        <div id="tab-content">
+            @include('partials.todo_table', [
+                'todos' => $todos,
+                'tab' => $tab,
+                'users' => $users,
+                'statusList' => $statusList,
+                'statusArr' => $statusArr
+            ])
         </div>
-        @endif
-
-        <!-- Modal chi tiết & sửa nhanh công việc -->
-        <div x-show="showModal && selectedTodo"
-             x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-2"
-             @keydown.escape.window="closeModal()"
-             @click.self="closeModal()">
-            <form @submit.prevent="submitEditForm"
-                class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full relative animate-fadeIn space-y-6 border border-blue-100"
-            >
-                @csrf
-                @method('POST')
-                <!-- Nút đóng -->
-                <button @click="closeModal()" type="button"
-                    class="absolute top-4 right-6 text-3xl text-gray-400 hover:text-red-500 transition">&times;</button>
-                <!-- Tiêu đề -->
-                <div class="mb-2">
-                    <input
-                        name="title"
-                        x-model="editForm.title"
-                        class="w-full text-2xl font-bold px-3 py-2 border-b border-blue-200 focus:outline-none focus:border-blue-500 bg-blue-50 rounded-t-xl"
-                        required
-                        autocomplete="off"
-                        :disabled="!selectedTodo"
-                        placeholder="Tiêu đề công việc..."
-                    >
-                </div>
-                <!-- 2 cột thông tin chính -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Cột trái -->
-                    <div class="space-y-3">
-                        <label class="block text-base-content/50 text-sm font-semibold">Deadline</label>
-                        <input
-                            type="datetime-local"
-                            name="deadline"
-                            x-model="editForm.deadline"
-                            class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50"
-                            :disabled="!selectedTodo"
-                        >
-                        <label class="block text-base-content/50 text-sm font-semibold">Ưu tiên</label>
-                        <select
-                            name="priority"
-                            x-model="editForm.priority"
-                            class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-red-400 bg-blue-50"
-                            :disabled="!selectedTodo"
-                        >
-                            <option value="Low">Thấp</option>
-                            <option value="Normal">Bình thường</option>
-                            <option value="High">Cao</option>
-                            <option value="Urgent">Khẩn cấp</option>
-                        </select>
-                        <label class="block text-base-content/50 text-sm font-semibold">Giao cho</label>
-                        <input
-                            type="text"
-                            class="w-full px-3 py-2 border border-base-200 bg-base-100 rounded"
-                            :value="selectedTodo && selectedTodo.assignee ? selectedTodo.assignee.name : 'Không giao'"
-                            readonly
-                        >
-                    </div>
-                    <!-- Cột phải -->
-                    <div class="space-y-3">
-                        <label class="block text-base-content/50 text-sm font-semibold">KPI mục tiêu</label>
-                        <input type="number" min="1"
-                               name="kpi_target"
-                               x-model="editForm.kpi_target"
-                               class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-green-400 bg-blue-50"
-                               :disabled="!selectedTodo"
-                        >
-                        <label class="block text-base-content/50 text-sm font-semibold">File đính kèm</label>
-                        <input type="url" name="attachment_link"
-                               x-model="editForm.attachment_link"
-                               class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50"
-                               placeholder="Dán link Google Docs, Figma, ..."
-                               :disabled="!selectedTodo"
-                        >
-                        <label class="block text-base-content/50 text-sm font-semibold">Trạng thái</label>
-                        <input type="text" class="w-full bg-base-100 px-3 py-2 rounded border border-blue-100" readonly
-                               x-model="editForm.status"
-                               :disabled="!selectedTodo"
-                        >
-                    </div>
-                </div>
-                <!-- Chi tiết -->
-                <div>
-                    <label class="block mt-2 text-base-content/50 text-sm font-semibold">Chi tiết</label>
-                    <textarea name="detail" x-model="editForm.detail"
-                              class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50"
-                              rows="2"
-                              :disabled="!selectedTodo"
-                              placeholder="Mô tả chi tiết công việc..."
-                    ></textarea>
-                </div>
-                <!-- Hiển thị tiến độ KPI -->
-                <template x-if="selectedTodo">
-                    <div class="bg-base-100 rounded-lg px-3 py-2 mt-3 flex items-center justify-between text-sm border border-base-200">
-                        <span>
-                            <b>Tiến độ:</b>
-                            <span x-text="editForm.total_progress ?? 0"></span>
-                            / <span x-text="editForm.kpi_target"></span>
-                            (<span x-text="percentProgress(editForm)"></span>%)
-                            <template x-if="editForm.is_completed_kpi">
-                                <span class="ml-1 text-success font-bold">Đã đạt</span>
-                            </template>
-                        </span>
-                        <a :href="selectedTodo ? ('{{ route('todos.progress.form', 0) }}'.replace('/0', '/' + selectedTodo.id)) : '#'"
-                           class="px-2 py-1 rounded bg-success text-white hover:bg-success/80 text-xs">Nhập tiến độ</a>
-                    </div>
-                </template>
-                <!-- Nút thao tác -->
-                <div class="flex gap-3 mt-6 flex-wrap justify-end items-center">
-                    <button type="submit"
-                        class="flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition text-base shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        :disabled="!selectedTodo"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                        Lưu thay đổi
-                    </button>
-                    <button type="button"
-                        @click="toggleComplete(selectedTodo.id)"
-                        class="flex items-center gap-2 px-5 py-2 rounded-xl font-semibold shadow bg-success text-white hover:bg-success/80 focus:outline-none focus:ring-2 focus:ring-success/300 transition text-base"
-                        :disabled="!selectedTodo"
-                    >
-                        <template x-if="!editForm.completed">
-                            <span class="flex items-center"><svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>Đánh dấu hoàn thành</span>
-                        </template>
-                        <template x-if="editForm.completed">
-                            <span class="flex items-center"><svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>Huỷ hoàn thành</span>
-                        </template>
-                    </button>
-                    <button type="button"
-                        @click="openDeleteConfirm(selectedTodo.id)"
-                        class="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 font-semibold shadow focus:outline-none focus:ring-2 focus:ring-red-300"
-                        :disabled="!selectedTodo"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                        Xoá
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Modal xác nhận xoá -->
-        <div x-show="showDeleteConfirm"
-             x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-             @keydown.escape.window="showDeleteConfirm = false"
-             @click.self="showDeleteConfirm = false">
-            <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full relative animate-fadeIn space-y-4">
-                <h2 class="text-xl font-bold text-red-600">Xác nhận xoá</h2>
-                <p>Bạn có chắc chắn muốn xoá công việc này không?</p>
-                <div class="flex gap-2 justify-end mt-4">
-                    <button @click="showDeleteConfirm = false"
-                            class="px-4 py-2 rounded-xl bg-base-300 text-base-content hover:bg-base-400">Huỷ</button>
-                    <button @click="deleteTodo(deleteTargetId)"
-                            class="px-4 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600">Xoá</button>
-                </div>
-            </div>
-        </div>
+        {{-- Modal, JS, ... giữ nguyên --}}
     </div>
 </div>
 
@@ -513,6 +126,26 @@ function dashboardData() {
         deleteTargetId: null,
         selectedTodo: null,
         editForm: {},
+        activeTab: '{{ $tab ?? 'myday' }}',
+        isLoading: false,
+        loadTab(tab) {
+            if (this.activeTab === tab) return;
+            this.activeTab = tab;
+            this.isLoading = true;
+            fetch(`/dashboard/tab/${tab}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Network error: ' + res.status);
+                    return res.text();
+                })
+                .then(html => {
+                    document.getElementById('tab-content').innerHTML = html;
+                    if (window.Alpine && Alpine.initTree) {
+                        Alpine.initTree(document.getElementById('tab-content'));
+                    }
+                })
+                .catch(err => alert('Lỗi khi chuyển tab: ' + err))
+                .finally(() => this.isLoading = false);
+        },
         openModal(todo) {
             this.selectedTodo = todo;
             this.editForm = {
