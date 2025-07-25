@@ -100,20 +100,27 @@
     </aside>
 
     <!-- Danh sách công việc -->
-    <div class="flex-1 p-6" x-data="dashboardData()">
+    <div class="flex-1 p-6 relative">
         <h2 class="text-2xl font-bold mb-6 text-center">Todo List</h2>
-        <div x-show="isLoading" class="flex justify-center items-center py-8">
-            <span class="loading loading-spinner loading-lg text-primary"></span>
+
+
+    <!-- Overlay loading tuyệt đối -->
+    <template x-if="isLoading">
+        <div class="absolute inset-0 bg-white/70 flex items-center justify-center z-40">
+            <span class="loading loading-ring loading-xl"></span>
         </div>
-        <div id="tab-content">
-            @include('partials.todo_table', [
-                'todos' => $todos,
-                'tab' => $tab,
-                'users' => $users,
-                'statusList' => $statusList,
-                'statusArr' => $statusArr
-            ])
-        </div>
+    </template>
+
+
+           <div id="tab-content" :aria-busy="isLoading">
+        @include('partials.todo_table', [
+            'todos' => $todos,
+            'tab' => $tab,
+            'users' => $users,
+            'statusList' => $statusList,
+            'statusArr' => $statusArr
+        ])
+    </div>
         <!-- Modal đặt ở đây -->
         <div x-show="showModal && selectedTodo" x-cloak class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" @keydown.escape.window="closeModal()" @click.self="closeModal()">
             <div class="bg-base-100 max-w-lg w-full rounded-2xl p-8 shadow-2xl relative border border-base-200 animate-fadeIn" @click.stop>
@@ -212,32 +219,36 @@ function dashboardData() {
         activeTab: '{{ $tab ?? 'myday' }}',
         isLoading: false,
         loadTab(tab) {
-            if (this.activeTab === tab) return;
-            this.activeTab = tab;
-            this.isLoading = true;
-            fetch(`/dashboard/tab/${tab}`)
-                .then(res => {
-                    if (!res.ok) throw new Error('Network error: ' + res.status);
-                    return res.text();
-                })
-                .then(html => {
-                    document.getElementById('tab-content').innerHTML = html;
-                    if (window.Alpine && Alpine.initTree) {
-                        Alpine.initTree(document.getElementById('tab-content'));
-                    }
-                })
-                .catch(err => alert('Lỗi khi chuyển tab: ' + err))
-                .finally(() => this.isLoading = false);
-        },
-        openModal(todo) {
-            this.selectedTodo = todo;
-            this.editForm = {
-                ...todo,
-                deadline: todo.deadline ? todo.deadline.replace(' ', 'T') : '',
-                assigned_to: todo.assigned_to ? Number(todo.assigned_to) : '',
-            };
-            this.showModal = true;
-        },
+    this.activeTab = tab;
+    this.isLoading = true;
+    fetch(`/dashboard/tab/${tab}`)
+        .then(res => {
+            if (!res.ok) throw new Error('Network error: ' + res.status);
+            return res.text();
+        })
+        .then(html => {
+            document.getElementById('tab-content').innerHTML = html;
+            this.closeModal(); // Reset modal khi reload
+            if (window.Alpine && Alpine.initTree) {
+                Alpine.initTree(document.getElementById('tab-content'));
+            }
+        })
+        .catch(err => alert('Lỗi khi chuyển tab: ' + err))
+        .finally(() => this.isLoading = false);
+},
+
+
+openModal(todo) {
+    // Lấy lại todo mới nhất từ DOM/table
+    this.selectedTodo = todo;
+    this.editForm = {
+        ...todo,
+        deadline: todo.deadline ? todo.deadline.replace(' ', 'T') : '',
+        assigned_to: todo.assigned_to ? Number(todo.assigned_to) : '',
+    };
+    this.showModal = true;
+},
+
         closeModal() {
             this.showModal = false;
             this.selectedTodo = null;
@@ -270,24 +281,26 @@ function dashboardData() {
                 body: form,
             });
             if (resp.ok) {
-                location.reload();
+                this.closeModal();
+                this.loadTab(this.activeTab);
             } else {
                 alert('Có lỗi khi lưu!');
             }
         },
 
         async toggleComplete(id) {
-            let url = `/todos/${id}/toggle`;
-            let resp = await fetch(url, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-            });
-            if (resp.ok) {
-                this.loadTab(this.activeTab);
-            } else {
-                alert('Không thể cập nhật!');
-            }
-        },
+    let url = `/todos/${id}/toggle`;
+    let resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+    });
+    if (resp.ok) {
+        this.loadTab(this.activeTab); // Sẽ OK vì server đã trả về JSON
+    } else {
+        alert('Không thể cập nhật!');
+    }
+},
+
 openDeleteConfirm(id) {
     this.deleteTargetId = id;
             this.showModal = false;          // Đóng modal chi tiết

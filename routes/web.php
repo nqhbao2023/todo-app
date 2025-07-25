@@ -66,3 +66,5 @@ Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 Route::get('/todos/create', [TodoController::class, 'create'])->name('todos.create');
 //update trạng thái
 
+Route::get('/report/export', [App\Http\Controllers\TodoController::class, 'exportReport'])->name('report.export');
+Route::get('/dashboard/tab/{tab}', [TodoController::class, 'tabPartial'])->name('dashboard.tabPartial');

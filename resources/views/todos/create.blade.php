@@ -9,7 +9,8 @@
             Thêm công việc mới
         </h2>
         @include('partials.flash_message')
-        <form action="{{ route('todos.add') }}" method="POST" class="space-y-7">
+            <form action="{{ route('todos.add') }}" method="POST" enctype="multipart/form-data" class="space-y-7">
+
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -87,13 +88,36 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block font-semibold mb-1 text-gray-700">File đính kèm</label>
-                    <input type="url" name="attachment_link" class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50" value="{{ old('attachment_link', $todo->attachment_link ?? '') }}" placeholder="Dán link Google Docs, Figma, Drive, ...">
-                    <small class="text-gray-500">Có thể là link Google Docs, Figma, Drive, tài liệu tiến độ công việc, v.v. (Tùy chọn)</small>
-                @error('attachment_link')
-                    <div class="text-red-500 text-sm">{{ $message }}</div>
-                @enderror
-            </div>
+                    <label class="block font-semibold mb-1 text-gray-700">Tài liệu đính kèm</label>
+                
+                    {{-- Link tài liệu --}}
+                    <input type="url" name="attachment_link"
+                        class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50 mb-2"
+                        placeholder="Dán link Google Docs, Figma, Drive, ..."
+                        value="{{ old('attachment_link', $todo->attachment_link ?? '') }}">
+                    <small class="text-gray-500">Hoặc tải file bên dưới</small>
+                
+                    {{-- File upload --}}
+                    <input type="file" name="attachment_file"
+                        class="w-full px-4 py-2 mt-2 border border-blue-200 rounded-lg bg-blue-50">
+                
+                    {{-- Hiển thị nếu có file cũ --}}
+                    @if(isset($todo) && $todo->attachment_file)
+                        <div class="mt-2 text-sm text-green-700">
+                            <a href="{{ asset('storage/' . $todo->attachment_file) }}" target="_blank" class="underline hover:text-blue-600">
+                                Xem tài liệu đã đính kèm
+                            </a>
+                        </div>
+                    @endif
+                
+                    @error('attachment_link')
+                        <div class="text-red-500 text-sm">{{ $message }}</div>
+                    @enderror
+                    @error('attachment_file')
+                        <div class="text-red-500 text-sm">{{ $message }}</div>
+                    @enderror
+                </div>
+                
                 <div class="flex flex-col justify-end">
                     <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition focus:outline-none focus:ring-2 focus:ring-blue-300 text-lg flex items-center justify-center gap-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>

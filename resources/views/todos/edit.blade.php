@@ -5,7 +5,7 @@
 <div class="max-w-lg mx-auto bg-white rounded-xl shadow-md p-8 mt-8">
     <h2 class="text-2xl font-bold mb-6">Sửa công việc</h2>
 
-    <form action="{{ route('todos.update', $todo->id) }}" method="POST" class="space-y-4">
+    <form action="{{ route('todos.update', $todo->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
         @csrf
         @method('PUT')
 
@@ -169,6 +169,22 @@
             @error('attachment_link')
                 <div class="text-red-500 text-sm">{{ $message }}</div>
             @enderror
+            {{-- File upload --}}
+            <input type="file" name="attachment_file"
+                class="w-full px-4 py-2 mt-2 border border-blue-200 rounded-lg bg-blue-50"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.zip,.rar,.txt">
+            <small class="text-gray-500">Chấp nhận PDF, Word, Excel, ảnh, nén,... (Tùy chọn)</small>
+            @error('attachment_file')
+                <div class="text-red-500 text-sm">{{ $message }}</div>
+            @enderror
+            {{-- Hiển thị nếu có file cũ --}}
+            @if($todo->attachment_file)
+                <div class="mt-2 text-sm text-green-700">
+                    <a href="{{ asset('storage/' . $todo->attachment_file) }}" target="_blank" class="underline hover:text-blue-600">
+                        Xem tài liệu đã đính kèm
+                    </a>
+                </div>
+            @endif
         </div>
 
         {{-- Nút submit --}}

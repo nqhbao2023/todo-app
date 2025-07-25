@@ -6,12 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::table('todos', function (Blueprint $table) {
-            $table->dropColumn(['repeat_days', 'repeat_weekday', 'repeat_day']);
+            if (Schema::hasColumn('todos', 'repeat_days')) {
+                $table->dropColumn('repeat_days');
+            }
+            if (Schema::hasColumn('todos', 'repeat_weekday')) {
+                $table->dropColumn('repeat_weekday');
+            }
+            if (Schema::hasColumn('todos', 'repeat_day')) {
+                $table->dropColumn('repeat_day');
+            }
         });
     }
+    
 
     public function down(): void
     {
