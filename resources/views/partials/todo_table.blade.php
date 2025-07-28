@@ -1,41 +1,7 @@
-{{-- TAB PLANNED --}}
-@if(isset($tab) && $tab == 'planned')
-    <div class="overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4">
-        <table class="min-w-full divide-y divide-base-200 text-[15px]">
-            <thead class="bg-base-200">
-                <tr>
-                    <th class="p-3 font-bold text-left text-base-content">Tên công việc</th>
-                    <th class="p-3 font-bold text-center">Deadline</th>
-                    @php $firstTodo = $todos->first(); @endphp
-                    @if($firstTodo && isset($firstTodo->daySuggestions) && is_iterable($firstTodo->daySuggestions))
-                        @foreach(array_keys($firstTodo->daySuggestions) as $date)
-                            <th class="p-3 font-bold text-center">Gợi ý {{ $date }}</th>
-                        @endforeach
-                    @endif
-                    <th class="p-3 font-bold text-center">Nhập tiến độ</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($todos as $t)
-                    <tr>
-                        <td class="p-3">{{ $t->title }}</td>
-                        <td class="p-3 text-center">{{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y') : '—' }}</td>
-                        @if(isset($t->daySuggestions) && is_iterable($t->daySuggestions))
-                            @foreach($t->daySuggestions as $suggest)
-                                <td class="p-3 text-center font-bold text-blue-700">{{ $suggest }}</td>
-                            @endforeach
-                        @endif
-                        <td class="p-3 text-center">
-                            <a href="{{ route('todos.progress.form', $t->id) }}" class="text-blue-600 hover:underline">Nhập tiến độ</a>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
 
+@php use Illuminate\Support\Str; @endphp
 {{-- TAB REPORT --}}
-@elseif(isset($tab) && $tab == 'report')
+@if(isset($tab) && $tab == 'report')
     <div class="mb-4">
         <form action="{{ route('report.export') }}" method="GET" class="flex items-center gap-2">
             <input type="month" name="month" value="{{ request('month', now()->format('Y-m')) }}" class="input input-bordered" />
@@ -45,31 +11,54 @@
             </button>
         </form>
     </div>
-    <div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4" style="overflow:visible;">
-        <table class="min-w-full divide-y divide-base-200 text-[15px]">
+    <div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4">
+        <table class="min-w-full divide-y divide-base-200 text-[15px] overflow-hidden">
             <thead class="bg-base-200">
                 <tr>
-                    <th class="p-3 font-bold text-center w-12">#</th>
-                    <th class="p-3 font-bold text-left text-base-content">Tên công việc</th>
-                    <th class="p-3 font-bold text-center">Deadline</th>
-                    <th class="p-3 font-bold text-center">KPI mục tiêu</th>
-                    <th class="p-3 font-bold text-center">Đã hoàn thành</th>
-                    <th class="p-3 font-bold text-center">% hoàn thành</th>
-                    <th class="p-3 font-bold text-center">Trạng thái</th>
-                    <th class="p-3 font-bold text-center">Người được giao</th>
+                    <th class="p-3 font-bold text-center w-10 whitespace-nowrap">#</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[110px]">Chỉ định cho</th>
+                    <th class="p-3 font-bold text-left text-base-content whitespace-nowrap min-w-[130px]">Tên công việc</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[120px]">Deadline</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[110px]">KPI mục tiêu</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[120px]">Đã hoàn thành</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[120px]">% hoàn thành</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[120px]">Trạng thái</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[110px]">Người được giao</th>
                 </tr>
             </thead>
+            
             <tbody class="divide-y divide-base-200">
                 @forelse($todos as $i => $t)
                     <tr>
+
                         <td class="p-3 text-center">{{ $i + 1 }}</td>
+                        <td class="text-center">    
+                            <div class="avatar">
+                                <div class="mask mask-squircle w-10 h-10">
+                                        
+                                        <img
+                                        src="{{ ($t->assignee && $t->assignee->avatar_url) 
+                                            ? asset('storage/' . ltrim($t->assignee->avatar_url, '/')) 
+                                            : asset('images/default-avatar.png') 
+                                        }}"
+                                        alt="Avatar {{ $t->assignee->name ?? '' }}"
+                                        class="w-10 h-10 rounded-full"
+                                    />
+                                
+                                                                </div>
+                            </div>
+                        </td>
                         <td class="p-3 font-medium">
                             <button
                                 class="hover:underline text-left w-full transition {{ $t->completed ? 'line-through text-base-content/50' : 'text-blue-700' }}"
                                 @click="openModal({{ json_encode([
                                     'id' => $t->id,
                                     'title' => $t->title,
-                                    'assignee' => $t->assignee ? ['name' => $t->assignee->name] : null,
+                                    'assigned_to' => $t->assigned_to,
+                                    'assignee' => $t->assignee ? [
+                                        'name' => $t->assignee->name,
+                                        'avatar_url' => $t->assignee->avatar_url
+                                    ] : null,
                                     'status' => $t->status,
                                     'priority' => $t->priority,
                                     'deadline' => $t->deadline,
@@ -78,6 +67,7 @@
                                     'percent_progress' => $t->percent_progress,
                                     'detail' => $t->detail,
                                     'attachment_link' => $t->attachment_link,
+                                    'attachment_file' => $t->attachment_file,
                                     'completed' => $t->completed,
                                     'important' => $t->important,
                                 ]) }})"
@@ -110,31 +100,50 @@
 {{-- TAB KPI --}}
 @elseif(isset($tab) && $tab == 'kpi')
     <div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4" style="overflow:visible;">
-        <table class="min-w-full divide-y divide-base-200 text-[15px]">
+        <table class="min-w-full divide-y divide-base-200 text-[15px] overflow-hidden">
             <thead class="bg-base-200">
                 <tr>
-                    <th class="p-3 font-bold text-center w-12">#</th>
-                    <th class="p-3 font-bold text-left text-base-content">Tên công việc</th>
-                    <th class="p-3 font-bold text-center">Deadline</th>
-                    <th class="p-3 font-bold text-center">KPI mục tiêu</th>
-                    <th class="p-3 font-bold text-center">Đã hoàn thành</th>
-                    <th class="p-3 font-bold text-center">% hoàn thành</th>
-                    <th class="p-3 font-bold text-center">Trạng thái KPI</th>
-                    <th class="p-3 font-bold text-center">Nhập tiến độ</th>
-                    <th class="p-3 font-bold text-center">Đề xuất chia nhỏ</th>
+                    <th class="p-3 font-bold text-center w-10 whitespace-nowrap">#</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[110px]">Chỉ định cho</th>
+                    <th class="p-3 font-bold text-left text-base-content whitespace-nowrap min-w-[130px]">Tên công việc</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[120px]">Deadline</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[110px]">KPI mục tiêu</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[120px]">Đã hoàn thành</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[120px]">% hoàn thành</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[120px]">Trạng thái KPI</th>
+                    <th class="p-3 font-bold text-center whitespace-nowrap min-w-[120px]">Đề xuất chia nhỏ</th>
                 </tr>
             </thead>
+            
             <tbody class="divide-y divide-base-200">
                 @forelse($todos as $i => $t)
                     <tr>
                         <td class="p-3 text-center">{{ $i + 1 }}</td>
+                        <td class="text-center">
+                            <div class="avatar">
+                                <div class="mask mask-squircle w-10 h-10">
+                                    <img
+                                        src="{{ ($t->assignee && $t->assignee->avatar_url)
+                                            ? asset('storage/' . ltrim($t->assignee->avatar_url, '/'))
+                                            : asset('images/default-avatar.png')
+                                        }}"
+                                        alt="Avatar {{ $t->assignee->name ?? '' }}"
+                                        class="w-10 h-10 rounded-full"
+                                    />
+                                </div>
+                            </div>
+                        </td>
                         <td class="p-3 font-medium">
                             <button
                                 class="hover:underline text-left w-full transition {{ $t->completed ? 'line-through text-base-content/50' : 'text-blue-700' }}"
                                 @click="openModal({{ json_encode([
                                     'id' => $t->id,
                                     'title' => $t->title,
-                                    'assignee' => $t->assignee ? ['name' => $t->assignee->name] : null,
+                                    'assigned_to' => $t->assigned_to,
+                                    'assignee' => $t->assignee ? [
+                                        'name' => $t->assignee->name,
+                                        'avatar_url' => $t->assignee->avatar_url
+                                    ] : null,
                                     'status' => $t->status,
                                     'priority' => $t->priority,
                                     'deadline' => $t->deadline,
@@ -155,16 +164,25 @@
                         <td class="p-3 text-center">{{ $t->kpi_target }}</td>
                         <td class="p-3 text-center">{{ $t->total_progress ?? 0 }}</td>
                         <td class="p-3 text-center">{{ $t->percent_progress ?? 0 }}%</td>
-                        <td class="p-3 text-center">
-                            @if($t->is_completed_kpi)
-                                <span class="text-success font-semibold">Đã đạt</span>
-                            @else
-                                <span class="text-warning font-semibold">Chưa đạt</span>
-                            @endif
+                        <td class="p-3 text-center align-middle">
+                            <div class="flex flex-col items-center gap-2">
+                                @if($t->is_completed_kpi)
+                                    <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold border border-green-300 dark:bg-green-800 dark:text-green-200 dark:border-green-600 shadow-sm">
+                                        Đã hoàn thành KPI
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 rounded-full bg-yellow-50 text-yellow-600 text-xs font-bold border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-600 shadow-sm">
+                                        Chưa đạt
+                                    </span>
+                                @endif
+                                <a href="{{ route('todos.progress.form', $t->id) }}"
+                                   class="btn btn-primary btn-sm mt-1 w-32 shadow-md transition
+                                          hover:scale-105 focus:outline-none">
+                                    Nhập tiến độ
+                                </a>
+                            </div>
                         </td>
-                        <td class="p-3 text-center">
-                            <a href="{{ route('todos.progress.form', $t->id) }}" class="text-blue-600 hover:underline font-semibold">Nhập tiến độ</a>
-                        </td>
+                        
                         <td class="p-3 text-center">
                             @php $today = now()->format('d/m'); @endphp
                             <div>
@@ -217,18 +235,18 @@
             </tbody>
         </table>
     </div>
-
-{{-- TAB MYDAY (Việc hôm nay, đã sửa cột) --}}
+{{-- TAB MYDAY (Việc hôm nay) --}}
 @elseif(isset($tab) && $tab == 'myday')
-    <div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4" style="overflow:visible;">
-        <table class="table min-w-full divide-y divide-base-200 text-[15px]">
-            <thead class="bg-base-200">
+<div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4">
+    <table class="min-w-full divide-y divide-base-200 text-[15px]">
+        <thead class="bg-base-200">
                 <tr>
+                    <th class="text-center rounded-tl-xl">Chỉ định cho</th>
                     <th>Tên công việc</th>
                     <th>Deadline</th>
                     <th>Quan trọng</th>
                     <th>Trạng thái</th>
-                    <th>Nhập tiến độ</th>
+                    <th class="rounded-tr-xl">Nhập tiến độ</th>
                 </tr>
             </thead>
             <tbody>
@@ -237,14 +255,36 @@
                         $isOverdue = !$t->completed && $t->deadline && \Carbon\Carbon::parse($t->deadline)->lt(now());
                         $today = now()->format('d/m');
                     @endphp
-                    <tr class="hover:bg-blue-50 transition-all group">
+<tr class="hover:bg-blue-50 dark:hover:bg-base-200 transition-all group">
+
+                        {{-- Avatar --}}
+                        <td class="text-center">
+                            <div class="avatar">
+                                <div class="mask mask-squircle w-10 h-10">
+                                    <img
+                                    src="{{ ($t->assignee && $t->assignee->avatar_url) 
+                                        ? asset('storage/' . ltrim($t->assignee->avatar_url, '/')) 
+                                        : asset('images/default-avatar.png') 
+                                    }}"
+                                    alt="Avatar {{ $t->assignee->name ?? '' }}"
+                                    class="w-10 h-10 rounded-full"
+                                />
+
+                                </div>
+                            </div>
+                        </td>
+                        {{-- Tên công việc --}}
                         <td>
                             <button
                                 class="font-bold hover:underline text-left w-full transition {{ $t->completed ? 'line-through text-base-content/50' : '' }}"
                                 @click="openModal({{ json_encode([
                                     'id' => $t->id,
                                     'title' => $t->title,
-                                    'assignee' => $t->assignee ? ['name' => $t->assignee->name] : null,
+                                    'assigned_to' => $t->assigned_to,
+                                    'assignee' => $t->assignee ? [
+                                        'name' => $t->assignee->name,
+                                        'avatar_url' => $t->assignee->avatar_url
+                                    ] : null,
                                     'status' => $t->status,
                                     'priority' => $t->priority,
                                     'deadline' => $t->deadline,
@@ -268,9 +308,11 @@
                                 @endif
                             </button>
                         </td>
+                        {{-- Deadline --}}
                         <td class="text-center {{ $isOverdue ? 'text-error font-bold' : '' }}">
                             {{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y H:i') : '—' }}
                         </td>
+                        {{-- Quan trọng --}}
                         <td class="text-center">
                             <form action="{{ route('todos.toggleImportance', $t->id) }}" method="POST" class="inline">
                                 @csrf
@@ -288,6 +330,7 @@
                                 </button>
                             </form>
                         </td>
+                        {{-- Trạng thái --}}
                         <td class="text-center whitespace-nowrap" style="overflow:visible;">
                             <div x-data="dropdownStatus('{{ $t->id }}', '{{ $t->status }}')" class="relative inline-block w-full">
                                 <button
@@ -323,9 +366,10 @@
                                 </div>
                             </div>
                         </td>
+                        {{-- Nhập tiến độ --}}
                         <td class="text-center">
                             @if($t->kpi_target)
-                                <a href="{{ route('todos.progress.form', $t->id) }}" class="text-blue-600 hover:underline">Nhập tiến độ</a>
+                                <a href="{{ route('todos.progress.form', parameters: $t->id) }}" class="text-blue-600 hover:underline">Nhập tiến độ</a>
                             @else
                                 <span class="text-base-content/40">—</span>
                             @endif
@@ -336,22 +380,25 @@
         </table>
     </div>
 
+
 {{-- TAB MẶC ĐỊNH --}}
 @else
     <div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4" style="overflow:visible;">
         <table class="table min-w-full divide-y divide-base-200 text-[15px]">
             <thead class="bg-base-200">
                 <tr>
-                    <th>
+                    <th class="rounded-tl-xl">
                         <label>
                             <input type="checkbox" class="checkbox" />
                         </label>
                     </th>
+        
+                    <th class="text-center">Chỉ định cho</th>
                     <th>Tên công việc</th>
                     <th>Deadline</th>
                     <th>Quan trọng</th>
-                    <th>Trạng thái</th>
-                    <th>Đề xuất chia nhỏ</th>
+                    <th >Trạng thái</th>
+                    <th class="text-center rounded-tr-xl">Người giao</th>
                 </tr>
             </thead>
             <tbody>
@@ -365,12 +412,27 @@
                             (($tab === 'completed' || $tab === 'report') ? $t->completed : !$t->completed)
                         )
                     )
-                    <tr class="hover:bg-blue-50 transition-all group">
+<tr class="hover:bg-blue-50 dark:hover:bg-base-200 transition-all group">
+
                         <th>
                             <label>
                                 <input type="checkbox" class="checkbox" :checked="{{ $t->completed ? 'true' : 'false' }}" @change="toggleComplete({{ $t->id }})" />
                             </label>
                         </th>
+                        <td class="text-center">
+                            <div class="avatar">
+                                <div class="mask mask-squircle w-10 h-10">
+                                    <img
+                                        src="{{ ($t->assignee && $t->assignee->avatar_url) 
+                                            ? asset('storage/' . ltrim($t->assignee->avatar_url, '/')) 
+                                            : asset('images/default-avatar.png') 
+                                        }}"
+                                        alt="Avatar {{ $t->assignee->name ?? '' }}"
+                                        class="w-10 h-10 rounded-full"
+                                    />
+                                </div>
+                            </div>
+                        </td>
                         <td>
                             <div class="flex items-center gap-3">
                                 <div>
@@ -379,7 +441,11 @@
                                         @click="openModal({{ json_encode([
                                             'id' => $t->id,
                                             'title' => $t->title,
-                                            'assignee' => $t->assignee ? ['name' => $t->assignee->name] : null,
+                                            'assigned_to' => $t->assigned_to,
+                                            'assignee' => $t->assignee ? [
+                                                'name' => $t->assignee->name,
+                                                'avatar_url' => $t->assignee->avatar_url
+                                            ] : null,
                                             'status' => $t->status,
                                             'priority' => $t->priority,
                                             'deadline' => $t->deadline,
@@ -473,53 +539,13 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            @if(isset($t->daySuggestions) && is_iterable($t->daySuggestions) && count($t->daySuggestions))
-                                <div>
-                                    @foreach($t->daySuggestions as $date => $suggest)
-                                        @if($date === $today)
-                                            <div class="font-bold text-primary mb-1">
-                                                Hôm nay: 
-                                                @if(is_string($suggest) && strpos($suggest, '/') !== false)
-                                                    @php
-                                                        $parts = explode('/', $suggest);
-                                                        $done = (int)($parts[0] ?? 0);
-                                                        $target = (int)($parts[1] ?? 0);
-                                                    @endphp
-                                                    {{ $done }}/{{ $target }}
-                                                    @if($done < $target)
-                                                        <span class="ml-1 text-warning font-semibold">(Còn {{ $target - $done }})</span>
-                                                    @else
-                                                        <span class="text-success font-semibold">✔</span>
-                                                    @endif
-                                                @else
-                                                    {{ $suggest }}
-                                                @endif
-                                            </div>
-                                        @endif
-                                    @endforeach
-                                    <div class="mt-1 text-xs text-base-content/60">
-                                        @foreach($t->daySuggestions as $date => $suggest)
-                                            @if($date !== $today)
-                                                <span class="inline-block mx-1">
-                                                    {{ $date }}: 
-                                                    @if(is_string($suggest) && strpos($suggest, '/') !== false)
-                                                        {{ $suggest }}
-                                                    @else
-                                                        {{ $suggest }}
-                                                    @endif
-                                                </span>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @else
-                                <span class="text-base-content/40">—</span>
-                            @endif
+                            {{ $t->user->name ?? '—' }}
                         </td>
                     </tr>
                     @endif
                 @endforeach
             </tbody>
+            
         </table>
     </div>
 @endif

@@ -6,6 +6,13 @@
     @vite('resources/css/app.css')
 </head>
 <body class="min-h-screen flex items-center justify-center bg-base-200">
+    @if(session('success'))
+    <div class="toast toast-top toast-center">
+        <div class="alert alert-success">
+            <span>{{ session('success') }}</span>
+        </div>
+    </div>
+@endif
     <form method="POST" action="/login" class="card w-full max-w-sm bg-base-100 shadow-xl border border-base-300">
         @csrf
         <div class="card-body">
@@ -42,17 +49,23 @@
         @if ($errors->has('email'))
                 <div class="text-error text-xs mb-2">{{ $errors->first('email') }}</div>
         @endif
+        <div class="flex justify-between items-center mb-4">
+            <a href="{{ route('password.request') }}" class="text-sm text-blue-500 hover:underline">Quên mật khẩu?</a>
+        </div>
         <button 
             type="submit" 
                 class="btn btn-primary w-full mt-2"
         >
             Đăng nhập
         </button>
+        
             <p class="mt-6 text-center text-sm text-base-content/70">
             Chưa có tài khoản?
                 <a href="/register" class="text-primary font-semibold hover:underline">Đăng ký ngay</a>
         </p>
         </div>
     </form>
+
+
 </body>
 </html>

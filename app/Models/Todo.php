@@ -41,6 +41,8 @@ class Todo extends Model
         'important',
         'repeat_custom',
         'flagged',
+        'attachment_file',
+
     ];
 
     protected $casts = [

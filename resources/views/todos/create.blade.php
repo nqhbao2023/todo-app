@@ -8,7 +8,7 @@
             <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             Thêm công việc mới
         </h2>
-        @include('partials.flash_message')
+      
             <form action="{{ route('todos.add') }}" method="POST" enctype="multipart/form-data" class="space-y-7">
 
             @csrf

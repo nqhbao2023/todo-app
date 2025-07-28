@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Exports\TodosReportExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Notifications\TodoCreatedNotification;
 class TodoController extends Controller
 {
     // Trang dashboard - danh sách todo với các tab dạng "My Day", "Important",...
@@ -86,7 +87,7 @@ class TodoController extends Controller
             $todosQuery->whereNotNull('kpi_target');
         }
 
-        $todos = $todosQuery->with('progresses')->orderBy('deadline')->paginate(10);
+        $todos = $todosQuery->orderBy('deadline')->paginate(10);
 
         if ($tab === 'myday') {
             foreach ($todos as $todo) {
@@ -168,10 +169,24 @@ class TodoController extends Controller
             'priority'        => 'required|string',
             'status'          => 'required|string',
             'detail'          => 'nullable|string',
-            'assigned_to'     => 'nullable|exists:users,id',
+            'assigned_to' => [
+                'nullable',
+                'exists:users,id',
+                function($attribute, $value, $fail) {
+                    if ($value) {
+                        $me = auth()->user();
+                        $assigned = \App\Models\User::find($value);
+                        // Nếu giao cho người có role cao hơn mình
+                        $roleRank = ['member' => 1, 'leader' => 2, 'admin' => 3];
+                        if ($assigned && $roleRank[$assigned->role] > $roleRank[$me->role]) {
+                            $fail('Bạn không thể giao việc cho người có cấp độ cao hơn bạn!');
+                        }
+                    }
+                }
+            ],
             'kpi_target'      => 'nullable|integer|min:1',
             'attachment_link' => 'nullable|url|max:500',
-            'attachment_file' => 'nullable|file|max:4096', // Giới hạn file 4MB
+            'attachment_file' => 'nullable|file|max:4096',
             'repeat'          => 'nullable|string|max:50',
             'repeat_custom'   => 'nullable|string|max:100',
         ]);
@@ -187,7 +202,7 @@ class TodoController extends Controller
             $attachmentFilePath = $request->file('attachment_file')->store('todo_attachments', 'public');
         }
     
-        Todo::create([
+        $todo = Todo::create([
             'user_id'         => Auth::id(),
             'title'           => $request->input('title'),
             'assigned_to'     => $request->input('assigned_to'),
@@ -199,9 +214,16 @@ class TodoController extends Controller
             'completed'       => false,
             'important'       => $request->boolean('important'),
             'attachment_link' => $request->input('attachment_link'),
-            'attachment_file' => $attachmentFilePath, // <-- Dòng mới
+            'attachment_file' => $attachmentFilePath,
             'repeat'          => $repeat,
         ]);
+
+        if ($todo->assigned_to) {
+            $assignee = User::find($todo->assigned_to);
+            if ($assignee) {
+                $assignee->notify(new \App\Notifications\TodoCreatedNotification($todo));
+            }
+        }
     
         return redirect()->route('dashboard')->with('success', 'Thêm công việc thành công!');
     }
@@ -230,7 +252,7 @@ class TodoController extends Controller
     {
         $user = Auth::user();
         // Nếu không phải leader thì không cho sửa assigned_to
-        if ($user->role !== 'leader') {
+        if (!in_array($user->role, ['admin', 'leader'])) {
             $request->request->remove('assigned_to');
         }
         if ($request->input('deadline') === 'none' || empty($request->input('deadline'))) {
@@ -272,6 +294,7 @@ class TodoController extends Controller
             'important'       => $request->boolean('important'),
         ]);
         $todo->save();
+        $todo->load('assignee');
 
         return redirect()->route('dashboard');
     }
@@ -280,7 +303,7 @@ class TodoController extends Controller
     {
         $user = Auth::user();
         // Nếu không phải leader thì không cho sửa assigned_to
-        if ($user->role !== 'leader') {
+        if (!in_array($user->role, ['admin', 'leader'])) {
             $request->request->remove('assigned_to');
         }
         $todo = Todo::where('id', $id)
@@ -326,8 +349,12 @@ class TodoController extends Controller
             'attachment_link' => $request->input('attachment_link'),
         ]);
         $todo->save();
+        $todo->load('assignee');
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'todo' => $todo // frontend có đầy đủ thông tin avatar, assignee, ...
+        ]);
     }
 
     // Đổi trạng thái (AJAX)
@@ -403,16 +430,54 @@ class TodoController extends Controller
             'progress_date' => 'required|date',
             'quantity'      => 'required|integer|min:1'
         ]);
+    
         $todo = Todo::where('id', $id)->where(function ($q) {
             $q->where('user_id', Auth::id())->orWhere('assigned_to', Auth::id());
         })->firstOrFail();
-
+    
+        $progressDate = Carbon::parse($request->input('progress_date'))->startOfDay();
+        $today = now()->startOfDay();
+        $deadline = $todo->deadline ? Carbon::parse($todo->deadline)->endOfDay() : null;
+    
+        // 1. Check: Không cho nhập trước ngày tạo việc hoặc sau deadline
+        if ($progressDate->lt($todo->created_at->startOfDay())) {
+            return back()->with('error', 'Không thể nhập tiến độ trước ngày bắt đầu công việc!');
+        }
+        if ($deadline && $progressDate->gt($deadline)) {
+            return back()->with('error', 'Không thể nhập tiến độ sau deadline!');
+        }
+    
+        // 2. Check: Không cho nhập tiến độ vào Chủ Nhật (nếu logic chia nhỏ bỏ CN)
+        if ($progressDate->isSunday()) {
+            return back()->with('error', 'Không được nhập tiến độ vào Chủ Nhật!');
+        }
+    
+        // 3. Check: Tổng tiến độ không vượt quá KPI
+        $quantity = (int)$request->input('quantity');
+        // Lấy tổng tiến độ các ngày khác
+        $totalProgressOtherDays = $todo->progresses()
+            ->where('progress_date', '!=', $progressDate->toDateString())
+            ->sum('quantity');
+        $totalIfSaved = $totalProgressOtherDays + $quantity;
+        if ($todo->kpi_target && $totalIfSaved > $todo->kpi_target) {
+            return back()->with('error', 'Tổng tiến độ không được vượt quá KPI mục tiêu!');
+        }
+    
+        // 4. Lưu tiến độ (update nếu đã có trong ngày)
         TodoProgress::updateOrCreate(
-            ['todo_id' => $todo->id, 'progress_date' => $request->input('progress_date')],
-            ['quantity' => $request->input('quantity')]
+            ['todo_id' => $todo->id, 'progress_date' => $progressDate->toDateString()],
+            ['quantity' => $quantity]
         );
+    
+        // 5. Đánh dấu completed nếu đủ tiến độ
+        if ($todo->kpi_target && ($totalIfSaved >= $todo->kpi_target)) {
+            $todo->completed = true;
+            $todo->save();
+        }
+    
         return redirect()->route('todos.progress.form', $todo->id)->with('success', 'Đã ghi nhận tiến độ!');
     }
+    
 
     private function getTodayKpiSuggestion($todo, $forDate = null)
     {
@@ -495,7 +560,7 @@ class TodoController extends Controller
                 // không filter thêm, lấy tất cả tasks liên quan user
                 break;
         }
-        $todos = $todosQuery->with('progresses')->orderBy('deadline')->paginate(10);
+        $todos = $todosQuery->orderBy('deadline')->paginate(10);
         $users = User::all();
 
         if ($tab === 'kpi') {
@@ -569,11 +634,7 @@ class TodoController extends Controller
                 } else {
                     $todo->daySuggestions = [];
                 }
-                // Tự động đánh dấu hoàn thành nếu đã đủ KPI
-                if ($todo->kpi_target && $todo->progresses->sum('quantity') >= $todo->kpi_target && !$todo->completed) {
-                    $todo->completed = true;
-                    $todo->save();
-                }
+
             }
         }
 

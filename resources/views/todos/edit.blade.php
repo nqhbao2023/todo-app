@@ -34,14 +34,26 @@
         {{-- Phần chọn giao cho ai --}}
         <div>
             <label class="font-semibold block mb-1">Giao cho</label>
-            <select name="assigned_to" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <select name="assigned_to" ...>
                 <option value="">-- Chọn thành viên --</option>
-                @foreach($users as $user)
-                    <option value="{{ $user->id }}" {{ (old('assigned_to', $todo->assigned_to ?? '') == $user->id) ? 'selected' : '' }}>
-                        {{ $user->name }}
+                @foreach($users as $u)
+                    {{-- Nếu user hiện tại là member, chỉ cho phép giao việc cho member khác, không cho chọn leader/admin --}}
+                    @if(auth()->user()->role === 'member' && in_array($u->role, ['admin', 'leader']))
+                        @continue
+                    @endif
+                    {{-- Nếu user hiện tại là leader, chỉ cho phép giao cho member, không cho chọn admin/leader --}}
+                    @if(auth()->user()->role === 'leader' && $u->role === 'admin')
+                        @continue
+                    @endif
+                    <option value="{{ $u->id }}" {{ old('assigned_to', $todo->assigned_to ?? '') == $u->id ? 'selected' : '' }}>
+                        {{ $u->name }}
+                        @if($u->role === 'leader') (Leader) @endif
+                        @if($u->role === 'admin') (Admin) @endif
                     </option>
                 @endforeach
             </select>
+            
+            
         </div>
 
         {{-- Mức độ ưu tiên --}}
