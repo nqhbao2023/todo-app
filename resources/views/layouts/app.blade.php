@@ -8,6 +8,7 @@
     @viteReactRefresh
     @vite('resources/css/app.css')
     @vite('resources/js/app.js')
+    @livewireStyles
     <style>
         [x-cloak] { display: none !important; }
     </style>
@@ -120,5 +121,6 @@
         </div>
     </div>
     @endif
+    @livewireScripts
 </body>
 </html>

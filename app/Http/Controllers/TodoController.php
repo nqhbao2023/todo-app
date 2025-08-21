@@ -733,10 +733,6 @@ class TodoController extends Controller
         if ($workdaysLeft <= 1) return $target - $done;
         return ceil(($target - $done) / $workdaysLeft);
     }
-
-
-
-
     public function exportReport(Request $request)
 {
     $month = $request->get('month', now()->format('Y-m'));
@@ -755,6 +751,28 @@ class TodoController extends Controller
 
     return Excel::download(new TodosReportExport($todos), "bao_cao_todo_$month.xlsx");
     }
+
+    public function quickAdd(Request $request)
+{
+    $data = $request->validate([
+        'title' => 'required|string|max:255',
+        'deadline' => 'nullable|date',
+        'remind' => 'nullable|date',
+        'repeat' => 'nullable|string|max:50',
+    ]);
+
+    $todo = Todo::create([
+        'title' => $data['title'],
+        'deadline' => $data['deadline'] ?? null,
+        'remind' => $data['remind'] ?? null,
+        'repeat' => $data['repeat'] ?? 'none',
+        'status' => 'Chưa làm',
+        'created_by' => auth()->id(),
+    ]);
+
+    return response()->json(['success' => true, 'todo' => $todo]);
+}
+
 
 
 }

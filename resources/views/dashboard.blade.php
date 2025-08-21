@@ -152,8 +152,11 @@
         </div>
     </template>
 
+    {{-- Thêm nhanh công việc --}}
 
-           <div id="tab-content" :aria-busy="isLoading">
+
+
+    <div id="tab-content" :aria-busy="isLoading">
 
         @include('partials.todo_table', [
             'todos' => $todos,
@@ -451,4 +454,50 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('quickAddTask', () => ({
+            title: '',
+            dueDate: '',
+            remind: '',
+            repeat: 'none',
+    
+            toggleDueDate() { this.dueDate = prompt('Chọn deadline (YYYY-MM-DD):', this.dueDate); },
+            toggleRemind() { this.remind = prompt('Nhập thời gian nhắc nhở (YYYY-MM-DD HH:mm):', this.remind); },
+            toggleRepeat() { this.repeat = prompt('Nhập lặp lại (daily, weekly, custom...):', this.repeat) || this.repeat; },
+    
+            async addTask() {
+                if (!this.title.trim()) {
+                    alert('Vui lòng nhập tên công việc');
+                    return;
+                }
+    
+                const response = await fetch("{{ route('todos.quickAdd') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        title: this.title,
+                        deadline: this.dueDate,
+                        remind: this.remind,
+                        repeat: this.repeat
+                    })
+                });
+    
+                if (response.ok) {
+                    this.title = '';
+                    this.dueDate = '';
+                    this.remind = '';
+                    this.repeat = 'none';
+                    window.dispatchEvent(new CustomEvent('todo-added'));
+                } else {
+                    alert('Có lỗi khi thêm công việc');
+                }
+            }
+        }));
+    });
+    </script>
+    
 @endsection

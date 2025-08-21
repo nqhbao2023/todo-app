@@ -1,7 +1,8 @@
-
+<div>
 @php use Illuminate\Support\Str; @endphp
 {{-- TAB REPORT --}}
 @if(isset($tab) && $tab == 'report')
+ 
     <div class="mb-4">
         <form action="{{ route('report.export') }}" method="GET" class="flex items-center gap-2">
             <input type="month" name="month" value="{{ request('month', now()->format('Y-m')) }}" class="input input-bordered" />
@@ -97,8 +98,10 @@
         </table>
     </div>
 
+
 {{-- TAB KPI --}}
 @elseif(isset($tab) && $tab == 'kpi')
+
     <div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4" style="overflow:visible;">
         <table class="min-w-full divide-y divide-base-200 text-[15px] overflow-hidden">
             <thead class="bg-base-200">
@@ -235,8 +238,11 @@
             </tbody>
         </table>
     </div>
+
 {{-- TAB MYDAY (Việc hôm nay) --}}
 @elseif(isset($tab) && $tab == 'myday')
+
+    
 <div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4">
     <table class="min-w-full divide-y divide-base-200 text-[15px]">
         <thead class="bg-base-200">
@@ -381,8 +387,10 @@
     </div>
 
 
+
 {{-- TAB MẶC ĐỊNH --}}
 @else
+
     <div class="relative overflow-x-auto rounded-xl shadow-lg border border-base-200 bg-base-100 mt-4" style="overflow:visible;">
         <table class="table min-w-full divide-y divide-base-200 text-[15px]">
             <thead class="bg-base-200">
@@ -548,4 +556,5 @@
             
         </table>
     </div>
-@endif
+    @endif
+</div>

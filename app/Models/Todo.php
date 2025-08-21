@@ -87,4 +87,13 @@ class Todo extends Model
     {
         return $this->total_progress >= $this->kpi_target;
     }
+
+    public function assignedTo()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

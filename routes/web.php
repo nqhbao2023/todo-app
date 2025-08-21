@@ -119,3 +119,4 @@ Route::post('reset-password', function (Request $request) {
         return back()->withErrors(['email' => __($status)]);
     }
 });
+Route::post('/todos/quick-add', [TodoController::class, 'quickAdd'])->name('todos.quickAdd');
